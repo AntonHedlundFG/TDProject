@@ -621,3 +621,8 @@ FUniqueNetIdRepl UEpicOnlineSubsystem::GetUniqueNetIdOf(APlayerController* Playe
 	}
 	return UniqueNetIdRepl;
 }
+
+void UEpicOnlineSubsystem::ServerTravel(const FString& LevelURL)
+{
+	GetWorld()->ServerTravel(LevelURL);
+}

@@ -309,6 +309,8 @@ private:
 	UFUNCTION(Category = "Online Services")
 	FUniqueNetIdRepl GetUniqueNetIdOf(APlayerController* Player);
 
+	UFUNCTION(BlueprintCallable, Category = "Online Services")
+	void ServerTravel(const FString& LevelURL);
 	
 	
 };
