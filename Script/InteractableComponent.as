@@ -1,7 +1,7 @@
 delegate void FOnInteractDelegate();
 delegate bool FCanInteractDelegate(APlayerController ControllerUsing);
 
-class UInteractableComponent : USceneComponent
+class UInteractableComponent : URegisteredSceneComponent
 {
     FOnInteractDelegate OnInteract;
     FCanInteractDelegate CanInteract;
@@ -21,19 +21,6 @@ class UInteractableComponent : USceneComponent
         }
         return bCanInteract;
     }
-
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
-    {
-        UObjectRegistry::Get().InteractableComponents.Add(this);
-    }
-
-    UFUNCTION(BlueprintOverride)
-    void EndPlay(EEndPlayReason EndPlayReason)
-    {
-        UObjectRegistry::Get().InteractableComponents.RemoveSingleSwap(this);
-    }
-
 };
 
 class UInteractionComponent : UActorComponent
@@ -45,8 +32,9 @@ class UInteractionComponent : UActorComponent
     {
         UInteractableComponent Nearest;
         float BestDistance = MAX_flt;
-        for (UInteractableComponent Component : UObjectRegistry::Get().InteractableComponents)
+        for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(UInteractableComponent::StaticClass()))
         {
+            UInteractableComponent Component = Cast<UInteractableComponent>(Object);
             const float Distance = Component.WorldLocation.Distance(Owner.ActorLocation);
             if (Distance > InteractionDistance || Distance > BestDistance) continue;
 
