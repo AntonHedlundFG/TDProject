@@ -5,31 +5,31 @@ class UInteractableComponent : URegisteredSceneComponent
 {
     //Must be bound!
     UPROPERTY()
-    FOnInteractDelegate OnInteract;
+    FOnInteractDelegate OnInteractDelegate;
 
     //Can be bound, if unbound interaction is always available. If the bound functions returns false, the interaction fails.
     UPROPERTY()
-    FCanInteractDelegate CanInteract;
+    FCanInteractDelegate CanInteractDelegate;
 
     bool CanInteract(APlayerController ControllerUsing)
     {
-        if (!CanInteract.IsBound())
+        if (!CanInteractDelegate.IsBound())
             return true;
-        return CanInteract.Execute(ControllerUsing);
+        return CanInteractDelegate.Execute(ControllerUsing);
     }
 
     bool TryInteract(APlayerController ControllerUsing)
     {
-        if (!OnInteract.IsBound())
+        if (!OnInteractDelegate.IsBound())
         {
             Print(FString("Trying to interact with unbound interactable:") + Owner.GetActorNameOrLabel());
             return false;
         }
 
-        const bool bCanInteract = (CanInteract.IsBound() ? CanInteract.Execute(ControllerUsing) : true);
+        const bool bCanInteract = (CanInteractDelegate.IsBound() ? CanInteractDelegate.Execute(ControllerUsing) : true);
         if (bCanInteract)
         {
-            OnInteract.Execute();
+            OnInteractDelegate.Execute();
         }
         return bCanInteract;
     }

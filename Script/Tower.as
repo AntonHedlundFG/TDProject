@@ -4,7 +4,15 @@
     USceneComponent Root;
 
     UPROPERTY(DefaultComponent, Attach = Root)
-    UStaticMeshComponent Mesh;
+    UStaticMeshComponent FinishedMesh;
+    default FinishedMesh.bVisible = true;
+
+    UPROPERTY(DefaultComponent, Attach = Root)
+    UStaticMeshComponent PreviewMesh;
+    default PreviewMesh.bVisible = false;
+
+    UPROPERTY(DefaultComponent)
+    UInteractableComponent InteractableComp;
 
     UPROPERTY(Category = "Tower")
     int32 Cost = 100;
@@ -26,21 +34,46 @@
 
     float Timer = 0.0f;
 
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, ReplicatedUsing = OnRep_IsBuilt, Transient, Category = "Tower")
+    bool bIsBuilt = false;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
+        //Bind InteractableComponent delegate functions.
+        InteractableComp.OnInteractDelegate.BindUFunction(this, n"Interact");
+        InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
+
+        //Makes sure Mesh visibilities are correct from the start.
+        OnRep_IsBuilt();
+    }
+
+    UFUNCTION()
+    private bool CanInteract(APlayerController ControllerUsing)
+    {
+        return !bIsBuilt;
+    }
+
+    UFUNCTION()
+    private void Interact()
+    {
+        bIsBuilt = true;
+        OnRep_IsBuilt();
     }
 
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
-        Timer += DeltaSeconds;
-        if (Timer >= FireRate)
+        if (System::IsServer() && bIsBuilt)
         {
-            Timer = 0.0f;
-            Fire();
+            Timer += DeltaSeconds;
+            if (Timer >= FireRate)
+            {
+                Timer = 0.0f;
+                Fire();
+            }
         }
+        
     }
 
     UFUNCTION()
@@ -51,5 +84,12 @@
             FRotator Direction = FirePoint.GetWorldRotation();
             AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), Direction));
         }
+    }
+
+    UFUNCTION()
+    void OnRep_IsBuilt()
+    {
+        FinishedMesh.SetVisibility(bIsBuilt);
+        PreviewMesh.SetVisibility(!bIsBuilt);
     }
 };
