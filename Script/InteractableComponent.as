@@ -36,27 +36,6 @@ class UInteractableComponent : USceneComponent
 
 };
 
-class ATestInteractable : AActor
-{
-    UPROPERTY(RootComponent, DefaultComponent)
-    UStaticMeshComponent RootComp;
-
-    UPROPERTY(DefaultComponent, Attach = RootComp)
-    UInteractableComponent InteractableComp;
-
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
-    {
-        InteractableComp.OnInteract.BindUFunction(this, n"TestInteract");
-    }
-
-    UFUNCTION()
-    private void TestInteract()
-    {
-        Print(FString("Interacted!"));
-    }
-}
-
 class UInteractionComponent : UActorComponent
 {
     float InteractionDistance = 250.0f;
