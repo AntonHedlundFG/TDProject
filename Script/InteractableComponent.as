@@ -11,6 +11,13 @@ class UInteractableComponent : URegisteredSceneComponent
     UPROPERTY()
     FCanInteractDelegate CanInteract;
 
+    bool CanInteract(APlayerController ControllerUsing)
+    {
+        if (!CanInteract.IsBound())
+            return true;
+        return CanInteract.Execute(ControllerUsing);
+    }
+
     bool TryInteract(APlayerController ControllerUsing)
     {
         if (!OnInteract.IsBound())
@@ -89,6 +96,16 @@ class UInteractionComponent : UActorComponent
         if (!IsValid(Nearest)) return false;
 
         return Nearest.TryInteract(User);
+    }
+
+    // Uses SearchForInteractables to check if an interaction with the currently selected interactable is possible.
+    UFUNCTION(BlueprintCallable)
+    bool CanInteract(APlayerController User)
+    {
+        UInteractableComponent Nearest = SearchForInteractables();
+        if (!IsValid(Nearest)) return false;
+
+        return Nearest.CanInteract(User);
     }
 
 }
