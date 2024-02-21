@@ -16,15 +16,18 @@ void AOnlinePlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 
 void AOnlinePlayerController::OnNetCleanup(UNetConnection* Connection)
 {
+	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
+	
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
-		
 		if (IsValid(Subsystem))
 		{
 			Subsystem->PlayerDisconnected(this);
 		}
 	}
+	if (IsLocalController())
+		Subsystem->DestroySession();
+
 	Super::OnNetCleanup(Connection);
 }
 

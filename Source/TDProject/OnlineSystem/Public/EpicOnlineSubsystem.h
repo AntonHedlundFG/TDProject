@@ -17,7 +17,7 @@
 * not all will be able to reconnect. Set this value to something appropriate to
 * your game.
 */ 
-#define MAX_RECONNECT_SLOTS 5 
+#define MAX_RECONNECT_SLOTS 1
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSessionSearchUpdate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReconnectSessionSearchUpdate, bool, CanReconnect);
