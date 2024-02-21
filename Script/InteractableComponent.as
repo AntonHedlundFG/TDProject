@@ -3,14 +3,19 @@ delegate bool FCanInteractDelegate(APlayerController ControllerUsing);
 
 class UInteractableComponent : URegisteredSceneComponent
 {
+    //Must be bound!
+    UPROPERTY()
     FOnInteractDelegate OnInteract;
+
+    //Can be bound, if unbound interaction is always available. If the bound functions returns false, the interaction fails.
+    UPROPERTY()
     FCanInteractDelegate CanInteract;
 
     bool TryInteract(APlayerController ControllerUsing)
     {
         if (!OnInteract.IsBound())
         {
-            Print(FString("Trying to interact with unbound interactable"));
+            Print(FString("Trying to interact with unbound interactable:") + Owner.GetActorNameOrLabel());
             return false;
         }
 
@@ -25,25 +30,58 @@ class UInteractableComponent : URegisteredSceneComponent
 
 class UInteractionComponent : UActorComponent
 {
+    //Maximum range from character to an interactable
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interaction)
     float InteractionDistance = 250.0f;
 
+    // Determines if we find the nearest interactable, or the one most in front of the player
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interaction)
+    bool bUseDotProductInsteadOfDistance = true;
+
+    //Searches within InteractionDistance to determine which interactable is the currently selected one.
     UFUNCTION(BlueprintCallable)
     UInteractableComponent SearchForInteractables()
     {
-        UInteractableComponent Nearest;
-        float BestDistance = MAX_flt;
-        for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(UInteractableComponent::StaticClass()))
+        if (bUseDotProductInsteadOfDistance)
         {
-            UInteractableComponent Component = Cast<UInteractableComponent>(Object);
-            const float Distance = Component.WorldLocation.Distance(Owner.ActorLocation);
-            if (Distance > InteractionDistance || Distance > BestDistance) continue;
-
-            Nearest = Component;
-            BestDistance = Distance;
+            //This version uses dot product to determine which interactable within range is in front of the character.
+            UInteractableComponent Best;
+            float BestDotProduct = -1.0f;
+            for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(UInteractableComponent::StaticClass()))
+            {
+                UInteractableComponent Component = Cast<UInteractableComponent>(Object);
+                const float Distance = Component.WorldLocation.Distance(Owner.ActorLocation);
+                if (Distance > InteractionDistance) continue;
+                const FVector DeltaVector = (Component.WorldLocation - Owner.ActorLocation).GetSafeNormal();
+                const float Dot = DeltaVector.DotProduct(Owner.ActorForwardVector);
+                if (Dot > BestDotProduct)
+                {
+                    Best = Component;
+                    BestDotProduct = Dot;
+                }
+            }
+            return Best;
         }
-        return Nearest;
+        else
+        {
+            //This version only checks distances and finds the nearest object, regardless of character direction.
+            UInteractableComponent Nearest;
+            float BestDistance = MAX_flt;
+            for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(UInteractableComponent::StaticClass()))
+            {
+                UInteractableComponent Component = Cast<UInteractableComponent>(Object);
+                const float Distance = Component.WorldLocation.Distance(Owner.ActorLocation);
+                if (Distance > InteractionDistance || Distance > BestDistance) continue;
+
+                Nearest = Component;
+                BestDistance = Distance;
+            }
+            return Nearest;
+        }
+        
     }
 
+    // Uses SearchForInteractables() to attempt an interaction with the currently selected interactable.
     UFUNCTION(BlueprintCallable)
     bool TryInteract(APlayerController User)
     {
