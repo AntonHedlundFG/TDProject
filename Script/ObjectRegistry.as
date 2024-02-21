@@ -42,6 +42,36 @@ class ARegisteredActor : AActor
     }
 }
 
+class ARegisteredPawn : APawn
+{
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        UObjectRegistry::Get().RegisterObject(this, Class);
+    }
+
+    UFUNCTION(BlueprintOverride)
+    void EndPlay(EEndPlayReason EndPlayReason)
+    {
+        UObjectRegistry::Get().DeregisterObject(this, Class);
+    }
+}
+
+class ARegisteredCharacter : ACharacter
+{
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        UObjectRegistry::Get().RegisterObject(this, Class);
+    }
+
+    UFUNCTION(BlueprintOverride)
+    void EndPlay(EEndPlayReason EndPlayReason)
+    {
+        UObjectRegistry::Get().DeregisterObject(this, Class);
+    }
+}
+
 class URegisteredSceneComponent : USceneComponent
 {
     UFUNCTION(BlueprintOverride)
