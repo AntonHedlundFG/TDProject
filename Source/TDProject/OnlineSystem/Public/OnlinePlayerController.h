@@ -22,4 +22,15 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Online Services")
 	void Server_ManualDisconnect();
 
+	UFUNCTION(BlueprintPure, Category = "Online Services")
+	bool IsTraveling() const { return bIsTraveling; }
+
+	UFUNCTION(BlueprintCallable, Category = "Online Services")
+	void SetTraveling(bool bNewState);
+
+private:
+
+	UPROPERTY(Replicated, VisibleAnywhere, Transient, Category = "Online Services")
+	bool bIsTraveling = false;
+
 };

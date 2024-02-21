@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TDProject\OnlineSystem\Public\LobbyGameMode.h"
 #include "Interfaces/OnlineExternalUIInterface.h"
+#include "TDProject\OnlineSystem\Public\OnlinePlayerController.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/EngineBaseTypes.h"
@@ -624,5 +625,11 @@ FUniqueNetIdRepl UEpicOnlineSubsystem::GetUniqueNetIdOf(APlayerController* Playe
 
 void UEpicOnlineSubsystem::ServerTravel(const FString& LevelURL)
 {
+	for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		auto CastPC = Cast<AOnlinePlayerController>(It->Get());
+		CastPC->SetTraveling(true);
+	}
+
 	GetWorld()->ServerTravel(LevelURL);
 }
