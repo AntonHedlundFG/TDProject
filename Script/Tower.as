@@ -1,12 +1,14 @@
 ﻿class ATower : AActor
 {
+    default bReplicates = true;
+
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
 
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent FinishedMesh;
     default FinishedMesh.bVisible = true;
-
+    
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent PreviewMesh;
     default PreviewMesh.bVisible = false;
@@ -40,9 +42,12 @@
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        //Bind InteractableComponent delegate functions.
-        InteractableComp.OnInteractDelegate.BindUFunction(this, n"Interact");
-        InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
+        if (System::IsServer())
+        {
+            //Bind InteractableComponent delegate functions.
+            InteractableComp.OnInteractDelegate.BindUFunction(this, n"Interact");
+            InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
+        }
 
         //Makes sure Mesh visibilities are correct from the start.
         OnRep_IsBuilt();

@@ -37,6 +37,8 @@ class UInteractableComponent : URegisteredSceneComponent
 
 class UInteractionComponent : UActorComponent
 {
+    default bReplicates = true;
+
     //Maximum range from character to an interactable
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Interaction)
     float InteractionDistance = 250.0f;
@@ -89,13 +91,21 @@ class UInteractionComponent : UActorComponent
     }
 
     // Uses SearchForInteractables() to attempt an interaction with the currently selected interactable.
+    // Returns true if a nearby interactable is found, even if the interaction fails!
     UFUNCTION(BlueprintCallable)
     bool TryInteract(APlayerController User)
     {
         UInteractableComponent Nearest = SearchForInteractables();
         if (!IsValid(Nearest)) return false;
 
-        return Nearest.TryInteract(User);
+        Server_TryInteract(User, Nearest);
+        return true;
+    }
+
+    UFUNCTION(Server)
+    void Server_TryInteract(APlayerController User, UInteractableComponent Target)
+    {
+        Target.TryInteract(User);
     }
 
     // Uses SearchForInteractables to check if an interaction with the currently selected interactable is possible.
