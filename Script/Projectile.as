@@ -1,18 +1,21 @@
 ﻿class AProjectile : AActor
 {
+    default bReplicates = true;
+    default LifeSpan = 3.0f;
+
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
 
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent Mesh;
 
+    UPROPERTY(Replicated)
     FVector ProjectileVelocity;
 
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        SetLifeSpan(3.0f);
         ProjectileVelocity = GetActorForwardVector() * 1000.0f;
     }
 
