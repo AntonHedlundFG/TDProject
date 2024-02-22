@@ -29,7 +29,7 @@
     float FireRate = 1.0f;
 
     UPROPERTY(Category = "Tower")
-    TSubclassOf<AProjectile> ProjectileClass;
+    TSubclassOf<AActor> ProjectileClass;
 
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent FirePoint;
