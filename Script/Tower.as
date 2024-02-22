@@ -8,7 +8,7 @@
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent FinishedMesh;
     default FinishedMesh.bVisible = true;
-    
+
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent PreviewMesh;
     default PreviewMesh.bVisible = false;
@@ -54,13 +54,13 @@
     }
 
     UFUNCTION()
-    private bool CanInteract(APlayerController ControllerUsing)
+    private bool CanInteract(APlayerController User)
     {
         return !bIsBuilt;
     }
 
     UFUNCTION()
-    private void Interact()
+    private void Interact(APlayerController User)
     {
         bIsBuilt = true;
         OnRep_IsBuilt();

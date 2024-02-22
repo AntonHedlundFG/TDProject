@@ -1,5 +1,5 @@
-delegate void FOnInteractDelegate();
-delegate bool FCanInteractDelegate(APlayerController ControllerUsing);
+delegate void FOnInteractDelegate(APlayerController User);
+delegate bool FCanInteractDelegate(APlayerController User);
 
 class UInteractableComponent : URegisteredSceneComponent
 {
@@ -29,7 +29,7 @@ class UInteractableComponent : URegisteredSceneComponent
         const bool bCanInteract = (CanInteractDelegate.IsBound() ? CanInteractDelegate.Execute(ControllerUsing) : true);
         if (bCanInteract)
         {
-            OnInteractDelegate.Execute();
+            OnInteractDelegate.Execute(ControllerUsing);
         }
         return bCanInteract;
     }
