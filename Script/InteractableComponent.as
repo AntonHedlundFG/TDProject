@@ -1,7 +1,7 @@
 delegate void FOnInteractDelegate(APlayerController User);
 delegate bool FCanInteractDelegate(APlayerController User);
 
-class UInteractableComponent : URegisteredSceneComponent
+class UInteractableComponent : USceneComponent
 {
     //Must be bound!
     UPROPERTY()
@@ -33,6 +33,17 @@ class UInteractableComponent : URegisteredSceneComponent
         }
         return bCanInteract;
     }
+
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_InteractableComponent);
+    }
+    UFUNCTION(BlueprintOverride)
+    void EndPlay(EEndPlayReason EndPlayReason)
+    {
+        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_InteractableComponent);
+    }
 };
 
 class UInteractionComponent : UActorComponent
@@ -56,7 +67,7 @@ class UInteractionComponent : UActorComponent
             //This version uses dot product to determine which interactable within range is in front of the character.
             UInteractableComponent Best;
             float BestDotProduct = -1.0f;
-            for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(UInteractableComponent::StaticClass()))
+            for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_InteractableComponent))
             {
                 UInteractableComponent Component = Cast<UInteractableComponent>(Object);
                 const float Distance = Component.WorldLocation.Distance(Owner.ActorLocation);
@@ -76,7 +87,7 @@ class UInteractionComponent : UActorComponent
             //This version only checks distances and finds the nearest object, regardless of character direction.
             UInteractableComponent Nearest;
             float BestDistance = MAX_flt;
-            for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(UInteractableComponent::StaticClass()))
+            for (UObject Object : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_InteractableComponent))
             {
                 UInteractableComponent Component = Cast<UInteractableComponent>(Object);
                 const float Distance = Component.WorldLocation.Distance(Owner.ActorLocation);

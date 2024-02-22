@@ -20,7 +20,7 @@ class ATrackingProjectile : AActor
         if (System::IsServer())
         {
             float BestDist = MAX_flt;
-            auto Objects = UObjectRegistry::Get().GetAllObjectsOfType(ATestEnemy::StaticClass());
+            auto Objects = UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster);
             Print(f"{Objects.Num() =}");
             for (UObject Obj : Objects)
             {

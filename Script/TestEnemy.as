@@ -43,4 +43,15 @@ class ATestEnemy : APawn
         SetActorLocation(tf.Location);
         SetActorRotation(tf.Rotation);
     }
+
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);
+    }
+    UFUNCTION(BlueprintOverride)
+    void EndPlay(EEndPlayReason EndPlayReason)
+    {
+        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Monster);
+    }
 };

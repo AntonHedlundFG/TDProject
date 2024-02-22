@@ -1,4 +1,4 @@
-﻿class ATDCharacter : ARegisteredCharacter
+﻿class ATDCharacter : ACharacter
 {
 
 
@@ -29,8 +29,13 @@
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        Super::BeginPlay();
         player = Cast<APlayerController>(Controller);
+        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Player);
+    }
+    UFUNCTION(BlueprintOverride)
+    void EndPlay(EEndPlayReason EndPlayReason)
+    {
+        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Player);
     }
 
     UFUNCTION(BlueprintOverride)
