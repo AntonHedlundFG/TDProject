@@ -7,6 +7,7 @@ class ATrackingProjectile : AActor
 
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent Mesh;
+    default Mesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     UPROPERTY(Replicated)
     AActor Target;
@@ -20,9 +21,7 @@ class ATrackingProjectile : AActor
         if (System::IsServer())
         {
             float BestDist = MAX_flt;
-            auto Objects = UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster);
-            Print(f"{Objects.Num() =}");
-            for (UObject Obj : Objects)
+            for (UObject Obj : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster))
             {
                 AActor Actor = Cast<AActor>(Obj);
                 if (!IsValid(Actor)) continue;
@@ -34,7 +33,6 @@ class ATrackingProjectile : AActor
                     Target = Actor;
                 }
             }
-            Print(f"Projectile fired: {Target =}");
         }
     }
 
