@@ -18,10 +18,7 @@ class AProjectile : AActor
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        if (System::IsServer())
-        {
-            System::SetTimer(this, n"Despawn", LifeTimeMax, false);
-        }
+        System::SetTimer(this, n"Despawn", LifeTimeMax, false);
     }
 
     UFUNCTION(BlueprintOverride)
@@ -174,11 +171,11 @@ class ANonTrackingProjectile : AProjectile
 
         if (T > 0)
         {
-            PredictedLocation = NewTargetLocation + TargetVelocity * T;
+            PredictedLocation = NewTargetLocation + TargetVelocity * T; // Aim at the predicted location
         }
         else
         {
-            PredictedLocation = NewTargetLocation;
+            PredictedLocation = NewTargetLocation; // No solution, just aim at the current location
         }
 
         FVector NewDirection = (PredictedLocation - ActorLocation).GetSafeNormal();
