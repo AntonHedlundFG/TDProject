@@ -13,11 +13,16 @@ class ATDEnemySpawner : AActor
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
+        SpawnEnemy(Enemy);
+    }
+
+    void SpawnEnemy(TSubclassOf<ATDEnemy> enemy)
+    {
         FVector pos = GetActorLocation();
         FRotator rot = GetActorRotation();
-        ATDEnemy SpawnedActor = Cast<ATDEnemy>(SpawnActor(Enemy, pos, rot));
+        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
 
-        SpawnedActor.Path = Path;
-        SpawnedActor.IsActive = true;
+        SpawnedEnemy.Path = Path;
+        SpawnedEnemy.IsActive = true;
     }
 };
