@@ -110,7 +110,10 @@ class ANonTrackingProjectile : AProjectile
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()
     {
-        Mesh.OnComponentBeginOverlap.AddUFunction(this, n"OnBeginOverlap");
+        if (System::IsServer())
+        {
+            Mesh.OnComponentBeginOverlap.AddUFunction(this, n"OnBeginOverlap");
+        }
     }
 
     UFUNCTION(BlueprintOverride)
