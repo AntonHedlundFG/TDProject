@@ -15,6 +15,9 @@ class AProjectile : AActor
     UPROPERTY(Replicated)
     float LifeTimeMax = 5.0f;
 
+    UPROPERTY(Replicated)
+    float Damage = 1.0f;
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
@@ -36,6 +39,22 @@ class AProjectile : AActor
     {
         DestroyActor();
     };
+
+    UFUNCTION(BlueprintEvent)
+    void DamageTarget(AActor Target) 
+    {
+        if(!IsValid(Target))
+        {
+            return;
+        }
+        // Get health component from target
+        UHealthSystemComponent HealthSystem = Cast<UHealthSystemComponent>(Target.GetComponentByClass(UHealthSystemComponent::StaticClass()));
+        if(IsValid(HealthSystem))
+        {
+            HealthSystem.TakeDamage(Damage);
+        }
+    };
+
 
 };
 
@@ -80,7 +99,7 @@ class ATrackingProjectile : AProjectile
 
         if (ActorLocation.DistSquared(Target.ActorLocation) < 0.01f)
         {
-            Print(f"DealDamageHere");
+            DamageTarget(Target);
             Despawn();
         }
     }
@@ -198,12 +217,7 @@ class ANonTrackingProjectile : AProjectile
     UFUNCTION()
     void OnBeginOverlap(UPrimitiveComponent OverlappedComponent, AActor OtherActor, UPrimitiveComponent OtherComp, int OtherBodyIndex, bool bFromSweep, const FHitResult&in SweepResult)    
     {
-        
-        if (OtherActor.IsA(AActor::StaticClass())) // TODO: Check for specific actor type
-        {
-            Print(f"DealDamageHere");
-        }
-        Print(f"Hit Something Destroying projectile");
+        DamageTarget(OtherActor);
         Despawn();
     }
 
@@ -211,6 +225,9 @@ class ANonTrackingProjectile : AProjectile
 
 class AStaticAOEProjectile : AProjectile
 {
+
+    UPROPERTY(Replicated)
+    float Range = 1000.0f;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -226,9 +243,9 @@ class AStaticAOEProjectile : AProjectile
 
                 const float Distance = Actor.ActorLocation.Distance(ActorLocation);
                 // Deal Damage to all monsters in range
-                if (Distance < 500.0f)
+                if (Distance < Range)
                 {
-                    Print(f"DealDamageHere");
+                    DamageTarget(Actor);
                 }
             }
         }

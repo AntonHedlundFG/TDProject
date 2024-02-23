@@ -72,9 +72,12 @@
             FRotator Direction = FirePoint.GetWorldRotation();
             AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), Direction));
             
-            if(Projectile.IsA(AStaticAOEProjectile::StaticClass())) // TODO: Replace with a better solution
+            AStaticAOEProjectile StaticAOEProjectile = Cast<AStaticAOEProjectile>(Projectile);
+
+            if(IsValid(StaticAOEProjectile)) // TODO: Replace with a better solution
             {
-                Projectile.SetActorScale3D(FVector(Range * 0.02f));
+                StaticAOEProjectile.Range = Range;
+                StaticAOEProjectile.SetActorScale3D(FVector(Range * 0.02f));
             }
         }
     }

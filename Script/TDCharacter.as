@@ -24,18 +24,21 @@
     UInteractionComponent InteractionComponent;
 
     UPROPERTY()
-    APlayerController player;
+    APlayerController PlayerController;
+
+    UPROPERTY(DefaultComponent)
+    UHealthSystemComponent HealthSystemComponent;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        player = Cast<APlayerController>(Controller);
-        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Player);
+        PlayerController = Cast<APlayerController>(Controller);
+        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);
     }
     UFUNCTION(BlueprintOverride)
     void EndPlay(EEndPlayReason EndPlayReason)
     {
-        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Player);
+        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Monster);
     }
 
     UFUNCTION(BlueprintOverride)
@@ -46,7 +49,7 @@
     UFUNCTION(BlueprintCallable)
     void Interact()
     {
-        InteractionComponent.TryInteract(player);
+        InteractionComponent.TryInteract(PlayerController);
     }
 
     UFUNCTION(BlueprintCallable)
@@ -79,5 +82,16 @@
             AddControllerPitchInput(Pitch);
         }
     }    
+
+    UFUNCTION(BlueprintCallable)
+    void OnHealthChanged(float Health, float MaxHealth)
+    {
+        if (Health <= 0)
+        {
+            // Death Logic Here
+            DisableInput(PlayerController);
+            Print(f"Character {GetName()} has died!");
+        }
+    }
 
 }
