@@ -18,7 +18,7 @@ class ATestEnemy : APawn
     UPROPERTY(Category = "Enemy Settings")
     FVector TargetPosition;
 
-    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    UPROPERTY(Category = "Enemy Settings")
     int iHealth = 1;
 
     UFUNCTION(BlueprintOverride)
@@ -42,16 +42,5 @@ class ATestEnemy : APawn
 
         SetActorLocation(tf.Location);
         SetActorRotation(tf.Rotation);
-    }
-
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
-    {
-        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);
-    }
-    UFUNCTION(BlueprintOverride)
-    void EndPlay(EEndPlayReason EndPlayReason)
-    {
-        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Monster);
     }
 };
