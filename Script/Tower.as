@@ -34,8 +34,6 @@
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent FirePoint;
 
-    float Timer = 0.0f;
-
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, ReplicatedUsing = OnRep_IsBuilt, Transient, Category = "Tower")
     bool bIsBuilt = false;
 
@@ -66,29 +64,6 @@
         OnRep_IsBuilt();
     }
 
-    UFUNCTION(BlueprintOverride)
-    void Tick(float DeltaSeconds)
-    {
-        if (System::IsServer() && bIsBuilt)
-        {
-            Timer += DeltaSeconds;
-            if (Timer >= FireRate)
-            {
-                Timer = 0.0f;
-                Fire();
-            }
-        }
-        System::DrawDebugSphere( 
-            FirePoint.GetWorldLocation(),
-            Range,
-            16,
-            FLinearColor::Black,
-            0,
-            5.0f
-        );
-            
-    }
-
     UFUNCTION()
     void Fire()
     {
@@ -109,5 +84,10 @@
     {
         FinishedMesh.SetVisibility(bIsBuilt);
         PreviewMesh.SetVisibility(!bIsBuilt);
+
+        if (System::IsServer() && bIsBuilt)
+        {
+            System::SetTimer(this, n"Fire", FireRate, true);
+        }          
     }
 };
