@@ -48,10 +48,11 @@ class AProjectile : AActor
             return;
         }
         // Get health component from target
-        UHealthSystemComponent HealthSystem = Cast<UHealthSystemComponent>(Target.GetComponentByClass(UHealthSystemComponent::StaticClass()));
+        UHealthSystemComponent HealthSystem = UHealthSystemComponent::Get(Target);
+        
         if(IsValid(HealthSystem))
         {
-            HealthSystem.TakeDamage(Damage);
+            HealthSystem.ServerTakeDamage(Damage);
         }
     };
 
@@ -107,8 +108,11 @@ class ATrackingProjectile : AProjectile
     UFUNCTION(BlueprintOverride)
     void Move(float DeltaSeconds) override
     {
+        if(!IsValid(Target))
+        {
+            return;
+        }
         // No movement for tracking projectiles
-        
         const float RemainingDistance = Target.ActorLocation.Distance(ActorLocation);
         const FVector Direction = (Target.ActorLocation - ActorLocation).GetSafeNormal();
         const FVector Movement = Direction * Math::Min(RemainingDistance, DeltaSeconds * Speed);
