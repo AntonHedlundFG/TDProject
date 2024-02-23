@@ -78,7 +78,15 @@
                 Fire();
             }
         }
-        
+        System::DrawDebugSphere( 
+            FirePoint.GetWorldLocation(),
+            Range,
+            16,
+            FLinearColor::Black,
+            0,
+            5.0f
+        );
+            
     }
 
     UFUNCTION()
@@ -88,6 +96,11 @@
         {
             FRotator Direction = FirePoint.GetWorldRotation();
             AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), Direction));
+            
+            if(Projectile.IsA(AStaticAOEProjectile::StaticClass())) // TODO: Replace with a better solution
+            {
+                Projectile.SetActorScale3D(FVector(Range * 0.02f));
+            }
         }
     }
 

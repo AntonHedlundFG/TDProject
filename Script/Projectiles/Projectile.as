@@ -12,6 +12,18 @@ class AProjectile : AActor
     UPROPERTY(Replicated)
     float Speed = 1000.0f;
 
+    UPROPERTY(Replicated)
+    float LifeTimeMax = 5.0f;
+
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        if (System::IsServer())
+        {
+            System::SetTimer(this, n"Despawn", LifeTimeMax, false);
+        }
+    }
+
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
@@ -21,6 +33,12 @@ class AProjectile : AActor
 
     UFUNCTION(BlueprintEvent)
     void Move(float DeltaSeconds) {};
+
+    UFUNCTION(BlueprintEvent)
+    void Despawn() 
+    {
+        DestroyActor();
+    };
 
 };
 
@@ -32,6 +50,7 @@ class ATrackingProjectile : AProjectile
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
+        Super::BeginPlay();
         if (System::IsServer())
         {
             float BestDist = MAX_flt;
@@ -57,7 +76,7 @@ class ATrackingProjectile : AProjectile
 
         if (!IsValid(Target))
         {
-            DestroyActor();
+            Despawn();
             return;
         }
 
@@ -65,7 +84,7 @@ class ATrackingProjectile : AProjectile
         if (ActorLocation.DistSquared(Target.ActorLocation) < 0.01f)
         {
             Print(f"DealDamageHere");
-            DestroyActor();
+            Despawn();
         }
     }
 
@@ -100,6 +119,7 @@ class ANonTrackingProjectile : AProjectile
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
+        Super::BeginPlay();
         if (System::IsServer())
         {
             float BestDist = MAX_flt;
@@ -184,7 +204,34 @@ class ANonTrackingProjectile : AProjectile
             Print(f"DealDamageHere");
         }
         Print(f"Hit Something Destroying projectile");
-        DestroyActor();
+        Despawn();
+    }
+
+};
+
+class AStaticAOEProjectile : AProjectile
+{
+
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        Super::BeginPlay();
+        if (System::IsServer())
+        {
+            float BestDist = MAX_flt;
+            for (UObject Obj : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster))
+            {
+                AActor Actor = Cast<AActor>(Obj);
+                if (!IsValid(Actor)) continue;
+
+                const float Distance = Actor.ActorLocation.Distance(ActorLocation);
+                // Deal Damage to all monsters in range
+                if (Distance < 500.0f)
+                {
+                    Print(f"DealDamageHere");
+                }
+            }
+        }
     }
 
 };
