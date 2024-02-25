@@ -38,6 +38,18 @@ void AOnlinePlayerController::SetTraveling(bool bNewState)
 	bIsTraveling = bNewState;
 }
 
+void AOnlinePlayerController::PawnLeavingGame()
+{
+	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
+	if (bDoNotDespawnPawnOnDisconnect && GetLocalRole() == ROLE_Authority && IsValid(Subsystem))
+	{
+	}
+	else
+	{
+		Super::PawnLeavingGame();
+	}
+}
+
 void AOnlinePlayerController::Server_ManualDisconnect_Implementation()
 {
 	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();

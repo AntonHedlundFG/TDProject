@@ -21,4 +21,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online Services")
 	bool bPlayersCanReconnectDuringMatch = true;
 
+private:
+
+	TMap<FString, APawn*> IdToPawnMap;
+
 };
