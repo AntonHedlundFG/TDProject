@@ -18,6 +18,8 @@ class ATDEnemySpawner : AActor
 
     void SpawnEnemy(TSubclassOf<ATDEnemy> enemy)
     {
+        if(!System::IsServer()) return;
+         
         FVector pos = GetActorLocation();
         FRotator rot = GetActorRotation();
         ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
