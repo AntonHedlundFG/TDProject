@@ -19,7 +19,6 @@ class UHealthSystemComponent : UActorComponent
     {
         CurrentHealth = MaxHealth;
         OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
-        Print(f"Health System Component has been initialized for {GetOwner().GetName()}");
     }
 
     UFUNCTION(Server, BlueprintCallable, Category = "Health")
@@ -32,7 +31,7 @@ class UHealthSystemComponent : UActorComponent
         if (CurrentHealth <= 0)
         {
             // Destroy actor 
-            GetOwner().DestroyActor();
+            //GetOwner().DestroyActor();
         }
 
     }
@@ -51,7 +50,7 @@ class UHealthSystemComponent : UActorComponent
     UFUNCTION()
     void OnRep_HealthCalueChanged()
     {
-        Print(f"Health value has been changed to {CurrentHealth} for {GetOwner().GetName()}");
+        //Print(f"Health value has been changed to {CurrentHealth} for {GetOwner().GetName()}");
     }
 
 
