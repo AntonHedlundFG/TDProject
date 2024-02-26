@@ -36,7 +36,6 @@
         UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);  // TODO: Change when we can test with enemies
 
         HealthSystemComponent.OnHealthChanged.BindUFunction(this, n"OnHealthChanged");
-        Print(f"Character {GetName()} has spawned!");
     }
 
     UFUNCTION(BlueprintOverride)
@@ -94,17 +93,14 @@
         {
             // Death Logic Here
             DisableInput(PlayerController);
-            Print(f"Character {GetName()} has died!");
         }
         if(System::IsServer())
         {
             // Server Logic Here
-            Print(f"Serverdamage");
         }
         else
         {
             // Client Logic Here
-            Print(f"Clientdamage");
         }
     }
 
