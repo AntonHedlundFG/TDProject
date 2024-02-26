@@ -14,7 +14,7 @@
     default PreviewMesh.bVisible = false;
 
     UPROPERTY(DefaultComponent)
-    UInteractableComponent InteractableComp;
+    UPricedInteractableComponent InteractableComp;
 
     UPROPERTY(Category = "Tower")
     int32 Cost = 100;
@@ -53,8 +53,7 @@
         if (System::IsServer())
         {
             //Bind InteractableComponent delegate functions.
-            InteractableComp.OnInteractDelegate.BindUFunction(this, n"Interact");
-            InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
+            InteractableComp.OnPurchasedDelegate.BindUFunction(this, n"Interact");
         }
 
         //Makes sure Mesh visibilities are correct from the start.
@@ -67,12 +66,6 @@
             ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
             Projectile.DestroyActor();
         }
-    }
-
-    UFUNCTION()
-    private bool CanInteract(APlayerController User)
-    {
-        return !bIsBuilt;
     }
 
     UFUNCTION()

@@ -4,11 +4,11 @@ delegate bool FCanInteractDelegate(APlayerController User);
 class UInteractableComponent : USceneComponent
 {
     //Must be bound!
-    UPROPERTY()
+    UPROPERTY(NotVisible)
     FOnInteractDelegate OnInteractDelegate;
 
     //Can be bound, if unbound interaction is always available. If the bound functions returns false, the interaction fails.
-    UPROPERTY()
+    UPROPERTY(NotVisible)
     FCanInteractDelegate CanInteractDelegate;
 
     bool CanInteract(APlayerController ControllerUsing)
