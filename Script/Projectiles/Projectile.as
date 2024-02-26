@@ -52,7 +52,7 @@ class AProjectile : AActor
         
         if(IsValid(HealthSystem))
         {
-            HealthSystem.ServerTakeDamage(Damage);
+            HealthSystem.TakeDamage(Damage);
         }
 
     };

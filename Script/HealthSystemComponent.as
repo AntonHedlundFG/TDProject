@@ -5,52 +5,56 @@ class UHealthSystemComponent : UActorComponent
 {
     default bReplicates = true;
 
-    UPROPERTY(Replicated)
+    UPROPERTY()
     HealthChanged OnHealthChanged;
 
-    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Health")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
     float MaxHealth;
 
-    UPROPERTY(Replicated, BlueprintReadOnly, ReplicatedUsing = OnRep_HealthCalueChanged, Category = "Health")
+    UPROPERTY(VisibleAnywhere, Replicated, BlueprintReadOnly, ReplicatedUsing = OnRep_HealthCalueChanged, Category = "Health")
     float CurrentHealth;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        CurrentHealth = MaxHealth;
-        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
+        SetHealth(MaxHealth);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void TakeDamage(float DamageAmount)
+    {
+        if(!System::IsServer())
+        {
+            return;
+        }
+
+        float NewHealth = CurrentHealth - DamageAmount;
+        SetHealth(NewHealth);
     }
 
     UFUNCTION(Server, BlueprintCallable, Category = "Health")
-    void ServerTakeDamage(float DamageAmount)
+    void Heal(float HealAmount)
     {
-        CurrentHealth -= DamageAmount;
-        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
-
-        Print(f"{GetOwner().GetName()} has taken {DamageAmount} damage");
-        if (CurrentHealth <= 0)
+        if(!System::IsServer())
         {
-            // Destroy actor 
-            //GetOwner().DestroyActor();
+            return;
         }
 
-    }
-
-    UFUNCTION(Server, BlueprintCallable, Category = "Health")
-    void ServerHeal(float HealAmount)
-    {
-        CurrentHealth += HealAmount;
-        if (CurrentHealth > MaxHealth)
-        {
-            CurrentHealth = MaxHealth;
-        }
-        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
+        float NewHealth = CurrentHealth + HealAmount;
+        SetHealth(NewHealth);
     }
 
     UFUNCTION()
     void OnRep_HealthCalueChanged()
     {
-        //Print(f"Health value has been changed to {CurrentHealth} for {GetOwner().GetName()}");
+        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
+    }
+
+    // Should only be called by the server
+    private void SetHealth(float NewHealth)
+    {
+        CurrentHealth =  Math::Clamp(NewHealth, 0.0f, MaxHealth);
+        OnRep_HealthCalueChanged();
     }
 
 
