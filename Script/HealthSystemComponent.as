@@ -1,48 +1,58 @@
 
-
-delegate void OnHealthChanged(float CurrentHealth, float MaxHealth);
+delegate void HealthChanged(float CurrentHealth, float MaxHealth);
 
 class UHealthSystemComponent : UActorComponent
 {
+    default bReplicates = true;
 
-    OnHealthChanged HealthChangedDelegate;
+    UPROPERTY(Replicated)
+    HealthChanged OnHealthChanged;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Health")
     float MaxHealth;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Health")
+    UPROPERTY(Replicated, BlueprintReadOnly, ReplicatedUsing = OnRep_HealthCalueChanged, Category = "Health")
     float CurrentHealth;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
         CurrentHealth = MaxHealth;
-        HealthChangedDelegate.ExecuteIfBound(CurrentHealth, MaxHealth);
+        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
+        Print(f"Health System Component has been initialized for {GetOwner().GetName()}");
     }
 
-    UFUNCTION(BlueprintCallable, Category = "Health")
-    void TakeDamage(float DamageAmount)
+    UFUNCTION(Server, BlueprintCallable, Category = "Health")
+    void ServerTakeDamage(float DamageAmount)
     {
         CurrentHealth -= DamageAmount;
-        HealthChangedDelegate.ExecuteIfBound(CurrentHealth, MaxHealth);
+        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
 
         Print(f"{GetOwner().GetName()} has taken {DamageAmount} damage");
-
         if (CurrentHealth <= 0)
         {
-            Print(f"{GetOwner().GetName()} has died");
+            // Destroy actor 
+            GetOwner().DestroyActor();
         }
+
     }
 
-    UFUNCTION(BlueprintCallable, Category = "Health")
-    void Heal(float HealAmount)
+    UFUNCTION(Server, BlueprintCallable, Category = "Health")
+    void ServerHeal(float HealAmount)
     {
         CurrentHealth += HealAmount;
         if (CurrentHealth > MaxHealth)
         {
             CurrentHealth = MaxHealth;
         }
-        HealthChangedDelegate.ExecuteIfBound(CurrentHealth, MaxHealth);
+        OnHealthChanged.ExecuteIfBound(CurrentHealth, MaxHealth);
     }
-    
+
+    UFUNCTION()
+    void OnRep_HealthCalueChanged()
+    {
+        Print(f"Health value has been changed to {CurrentHealth} for {GetOwner().GetName()}");
+    }
+
+
 };

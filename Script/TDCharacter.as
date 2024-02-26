@@ -34,7 +34,11 @@
     {
         PlayerController = Cast<APlayerController>(Controller);
         UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);
+
+        HealthSystemComponent.OnHealthChanged.BindUFunction(this, n"OnHealthChanged");
+        Print(f"Character {GetName()} has spawned!");
     }
+
     UFUNCTION(BlueprintOverride)
     void EndPlay(EEndPlayReason EndPlayReason)
     {
@@ -91,6 +95,16 @@
             // Death Logic Here
             DisableInput(PlayerController);
             Print(f"Character {GetName()} has died!");
+        }
+        if(System::IsServer())
+        {
+            // Server Logic Here
+            Print(f"Serverdamage");
+        }
+        else
+        {
+            // Client Logic Here
+            Print(f"Clientdamage");
         }
     }
 
