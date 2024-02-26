@@ -1,7 +1,17 @@
+event void FOnEnemySpawnEvent(ATDEnemy Enemy);
+event void FOnEnemyDeathEvent(ATDEnemy Enemy);
+event void FOnEnemyGoalReachedEvent(ATDEnemy Enemy);
+
+
 class ATDEnemy : AActor
 {
     default bReplicates = true;
     default bReplicateMovement = true;
+
+    FOnEnemySpawnEvent OnEnemySpawn;
+    FOnEnemyDeathEvent OnEnemyDeath;
+    FOnEnemyGoalReachedEvent OnGoalReached;
+    
 
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
@@ -13,13 +23,17 @@ class ATDEnemy : AActor
     USplineComponent Path;
 
 
-    UPROPERTY(BlueprintReadWrite)
+    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    int PointValue = 1;
+    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    int KillBounty = 1;
+    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     float MoveSpeed = 500;
-    UPROPERTY(NotEditable)
-    float LerpAlpha = 0;
-
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     bool IsActive = false;
+
+    UPROPERTY(NotEditable)
+    float LerpAlpha = 0;
 
 
     UFUNCTION(BlueprintOverride)
@@ -28,6 +42,23 @@ class ATDEnemy : AActor
         MoveAlongSpline(DeltaSeconds);
     }
 
+    UFUNCTION()
+    void OnUnitSpawn(USplineComponent path)
+    {
+        Path = path;
+        IsActive = true;
+        OnEnemySpawn.Broadcast(this);
+    }
+
+    UFUNCTION()
+    void OnUnitDeath()
+    {
+        Path = nullptr;
+        IsActive = false;
+        OnEnemyDeath.Broadcast(this);
+    }
+
+    UFUNCTION()
     void MoveAlongSpline(float DeltaSeconds)
     {
         if(Path == nullptr || !IsActive) return;
@@ -36,6 +67,7 @@ class ATDEnemy : AActor
         if(LerpAlpha >= 1.f)
         {
             Print("Goal Reached");
+            OnGoalReached.Broadcast(this);
             IsActive = false;
             LerpAlpha = 0;
             return;
