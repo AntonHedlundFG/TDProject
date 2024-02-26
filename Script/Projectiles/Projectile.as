@@ -126,10 +126,6 @@ class ANonTrackingProjectile : AProjectile
     default Mesh.SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
     default Mesh.SetGenerateOverlapEvents(true);
 
-    FVector TargetLocation;
-    AActor Target;
-    float Time;
-
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()
     {
@@ -137,78 +133,6 @@ class ANonTrackingProjectile : AProjectile
         {
             Mesh.OnComponentBeginOverlap.AddUFunction(this, n"OnBeginOverlap");
         }
-    }
-
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
-    {
-        Super::BeginPlay();
-        if (System::IsServer())
-        {
-            float BestDist = MAX_flt;
-            for (UObject Obj : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster))
-            {
-                AActor Actor = Cast<AActor>(Obj);
-                if (!IsValid(Actor)) continue;
-
-                const float Distance = Actor.ActorLocation.Distance(ActorLocation);
-                if (Distance < BestDist)
-                {
-                    BestDist = Distance;
-                    Target = Actor;
-                    TargetLocation = Actor.ActorLocation;
-                    FVector Direction = (TargetLocation - ActorLocation).GetSafeNormal();
-                    SetActorRotation(Direction.Rotation());
-                    Time = GetWorld().GetTimeSeconds();
-
-                    // Schedule for next frame to allow for target to move
-                    System::SetTimer(this, n"PredictTargetLocation", 0.01f, false);
-                }
-            }
-        }
-    }
-
-    UFUNCTION()
-    void PredictTargetLocation()
-    {
-        // Prediction algorithm from https://www.gamedeveloper.com/programming/predictive-aim-mathematics-for-ai-targeting
-
-        FVector PredictedLocation;
-        FVector NewTargetLocation = Target.ActorLocation;
-        FVector DistanceSinceLastUpdate = NewTargetLocation - TargetLocation;
-        FVector Direction = DistanceSinceLastUpdate.GetSafeNormal();
-        float TimeSinceLastUpdate = GetWorld().GetTimeSeconds() - Time;
-        FVector TargetVelocity = DistanceSinceLastUpdate / TimeSinceLastUpdate;
-
-        float CosTheta = Direction.DotProduct((GetActorLocation() - NewTargetLocation).GetSafeNormal());
-        float DistanceToTarget = (NewTargetLocation - ActorLocation).Size();
-
-        // Calculate the time to intercept assuming the target continues in a straight line at constant velocity
-        float A = Speed * Speed - TargetVelocity.SizeSquared();
-        float B = 2 * DistanceToTarget * TargetVelocity.Size() * CosTheta;
-        float C = -DistanceToTarget * DistanceToTarget;
-
-        float T1 = (-B + Math::Sqrt(B * B - 4 * A * C)) / (2 * A);
-        float T2 = (-B - Math::Sqrt(B * B - 4 * A * C)) / (2 * A);
-
-        T1 = T1 < 0 ? T1 = MAX_flt : T1;
-        T2 = T2 < 0 ? T2 = MAX_flt : T2;
-        float T = Math::Min(T1, T2);
-
-        if (T > 0)
-        {
-            PredictedLocation = NewTargetLocation + TargetVelocity * T; // Aim at the predicted location
-        }
-        else
-        {
-            PredictedLocation = NewTargetLocation; // No solution, just aim at the current location
-        }
-
-        FVector NewDirection = (PredictedLocation - ActorLocation).GetSafeNormal();
-        SetActorRotation(NewDirection.Rotation());
-
-        //System::DrawDebugArrow(ActorLocation, PredictedLocation, 10.0f, FLinearColor::Red, 1.0f);
-
     }
 
     UFUNCTION(BlueprintOverride)
