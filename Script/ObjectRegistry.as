@@ -32,12 +32,12 @@ class UObjectRegistry : UGameInstanceSubsystem
         if (Objects.IsEmpty())
             return nullptr;
 
-        AActor Closest = Cast<AActor>(Objects[0]);
+        AActor Closest = nullptr;
         float MinDistance = MAX_flt;
-        for (int i = 1; i < Objects.Num(); i++)
+        for (int i = 0; i < Objects.Num(); i++)
         {
             AActor Current = Cast<AActor>(Objects[i]);
-            float Distance = Location.Distance(Closest.GetActorLocation());
+            float Distance = Location.Distance(Current.GetActorLocation());
             if (Distance < MinDistance)
             {
                 MinDistance = Distance;
