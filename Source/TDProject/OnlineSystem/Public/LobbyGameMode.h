@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "LobbyGameMode.generated.h"
 
+class ATDPlayerState;
+
 /**
  * 
  */
@@ -18,14 +20,15 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+	virtual void Logout(AController* Exiting) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online Services")
 	bool bPlayersCanReconnectDuringMatch = true;
 
-	void ClearIdToPawnMap() { IdToPawnMap.Empty(); }
-
 private:
 
 	TMap<FString, APawn*> IdToPawnMap;
+
+	TArray<ATDPlayerState*> InactiveStates;
 
 };

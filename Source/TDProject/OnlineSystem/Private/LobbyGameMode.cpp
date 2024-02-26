@@ -3,6 +3,8 @@
 
 #include "TDProject\OnlineSystem\Public\LobbyGameMode.h"
 #include "TDProject\OnlineSystem\Public\EpicOnlineSubsystem.h"
+#include "TDProject\Public\TDPlayerState.h"
+#include "GameFramework/PlayerState.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -35,6 +37,28 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	//Regardless of whether we spawned a new pawn or possessed a previous one, make sure it's mapped.
 	IdToPawnMap.Add(UniqueNetIDString, NewPlayer->GetPawn());
+
+
+	// -- HANDLE INACTIVE PLAYER STATES BELOW --
+
+	// Search for inactive states belonging to the connecting players unique player ID.
+	for (ATDPlayerState* InactiveState : InactiveStates)
+	{
+		if (InactiveState->UniqueOwnerNetID == UniqueNetIDString)
+		{
+			InactiveStates.RemoveSingleSwap(InactiveState);
+			InactiveState->DispatchCopyProperties(NewPlayer->PlayerState);
+			InactiveState->Destroy();
+			break;
+		}
+	}
+
+	//Update the playerstate with the unique player ID, for reconnecting.
+	if (auto* CastState = Cast<ATDPlayerState>(NewPlayer->PlayerState))
+	{
+		CastState->UniqueOwnerNetID = UniqueNetIDString;
+	}
+
 }
 
 void ALobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
@@ -52,5 +76,23 @@ void ALobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	const FUniqueNetIdRepl UniqueNetID = Subsystem->GetUniqueNetIdOf(PC);
 	const FString UniqueNetIDString = UniqueNetID->ToString();
 
+	//Map the pawn to the unique player ID
 	IdToPawnMap.Add(UniqueNetIDString, PC->GetPawn());
+
+	//Update the playerstate with the unique player ID, for reconnecting.
+	if (auto* CastState = Cast<ATDPlayerState>(C->PlayerState))
+	{
+		CastState->UniqueOwnerNetID = UniqueNetIDString;
+	}
+}
+
+void ALobbyGameMode::Logout(AController* Exiting)
+{
+	if (auto* CastState = Cast<ATDPlayerState>(Exiting->PlayerState))
+	{
+		ATDPlayerState* NewPS = GetWorld()->SpawnActor<ATDPlayerState>(ATDPlayerState::StaticClass());
+		CastState->DispatchCopyProperties(NewPS);
+		InactiveStates.Add(NewPS);
+	}
+	Super::Logout(Exiting);
 }
