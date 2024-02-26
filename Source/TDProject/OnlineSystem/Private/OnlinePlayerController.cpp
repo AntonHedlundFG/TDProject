@@ -20,7 +20,7 @@ void AOnlinePlayerController::OnNetCleanup(UNetConnection* Connection)
 	
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		if (IsValid(Subsystem))
+		if (IsValid(Subsystem) && Subsystem->IsPlayerLoggedIn())
 		{
 			Subsystem->PlayerDisconnected(this);
 		}
@@ -36,6 +36,19 @@ void AOnlinePlayerController::SetTraveling(bool bNewState)
 	if (GetNetMode() > ENetMode::NM_ListenServer) return;
 	
 	bIsTraveling = bNewState;
+}
+
+void AOnlinePlayerController::PawnLeavingGame()
+{
+	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
+	if (bDoNotDespawnPawnOnDisconnect && GetLocalRole() == ROLE_Authority 
+		&& IsValid(Subsystem) && Subsystem->IsPlayerLoggedIn())
+	{
+	}
+	else
+	{
+		Super::PawnLeavingGame();
+	}
 }
 
 void AOnlinePlayerController::Server_ManualDisconnect_Implementation()

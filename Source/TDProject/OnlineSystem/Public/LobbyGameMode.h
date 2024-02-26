@@ -17,8 +17,15 @@ class TDPROJECT_API ALobbyGameMode : public AGameModeBase
 public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online Services")
 	bool bPlayersCanReconnectDuringMatch = true;
+
+	void ClearIdToPawnMap() { IdToPawnMap.Empty(); }
+
+private:
+
+	TMap<FString, APawn*> IdToPawnMap;
 
 };

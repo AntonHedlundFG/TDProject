@@ -28,6 +28,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Online Services")
 	void SetTraveling(bool bNewState);
 
+	//Only relevant on server.
+	UPROPERTY(EditAnywhere, Replicated, Category = "Online Services")
+	bool bDoNotDespawnPawnOnDisconnect = true;
+	virtual void PawnLeavingGame() override;
+
 private:
 
 	UPROPERTY(Replicated, VisibleAnywhere, Transient, Category = "Online Services")
