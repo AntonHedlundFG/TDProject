@@ -8,28 +8,19 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
 
-	if (!Subsystem)
+	if (!Subsystem || !Subsystem->IsPlayerLoggedIn())
 	{
 		Super::PostLogin(NewPlayer);
 		return;
 	}
 
-	//Only the server handles connecting players
-	if (!NewPlayer->IsLocalController())
-	{
-		if (IsValid(Subsystem))
-			Subsystem->PlayerConnected(NewPlayer);
-	}
+	Subsystem->PlayerConnected(NewPlayer);
 
 	// -- HANDLE REPOSSESSING OF PAWNS WHEN RECONNECTING BELOW --
 
 	//If we have no unique net ID we are currently not using online functionality, probably PIE.
 	const FUniqueNetIdRepl UniqueNetID = Subsystem->GetUniqueNetIdOf(NewPlayer);
-	if (!UniqueNetID.IsValid())
-	{
-		Super::PostLogin(NewPlayer);
-		return;
-	}
+
 	const FString UniqueNetIDString = UniqueNetID->ToString();
 
 	//Check if our map contains a pawn assigned to the players unique ID, if so, possess it.
@@ -44,4 +35,22 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	//Regardless of whether we spawned a new pawn or possessed a previous one, make sure it's mapped.
 	IdToPawnMap.Add(UniqueNetIDString, NewPlayer->GetPawn());
+}
+
+void ALobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+
+	// -- REGISTER PAWNS FOR REPOSSESSING WHEN SEAMLESSLY TRAVELLING --
+
+	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
+	if (!Subsystem || !Subsystem->IsPlayerLoggedIn()) return;
+
+	APlayerController* PC = Cast<APlayerController>(C);
+	if (!PC || !PC->GetPawn()) return;
+
+	const FUniqueNetIdRepl UniqueNetID = Subsystem->GetUniqueNetIdOf(PC);
+	const FString UniqueNetIDString = UniqueNetID->ToString();
+
+	IdToPawnMap.Add(UniqueNetIDString, PC->GetPawn());
 }
