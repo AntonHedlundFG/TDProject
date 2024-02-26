@@ -9,13 +9,13 @@ class AProjectile : AActor
     UStaticMeshComponent Mesh;
     default Mesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    UPROPERTY(Replicated)
+    UPROPERTY()
     float Speed = 1000.0f;
 
-    UPROPERTY(Replicated)
+    UPROPERTY()
     float LifeTimeMax = 5.0f;
 
-    UPROPERTY(Replicated)
+    UPROPERTY()
     float Damage = 1.0f;
 
     UFUNCTION(BlueprintOverride)
@@ -54,6 +54,7 @@ class AProjectile : AActor
         {
             HealthSystem.ServerTakeDamage(Damage);
         }
+
     };
 
 
@@ -154,7 +155,7 @@ class ANonTrackingProjectile : AProjectile
 class AStaticAOEProjectile : AProjectile
 {
 
-    UPROPERTY(Replicated)
+    UPROPERTY()
     float Range = 1000.0f;
 
     UFUNCTION(BlueprintOverride)
