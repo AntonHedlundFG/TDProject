@@ -617,6 +617,7 @@ FUniqueNetIdRepl UEpicOnlineSubsystem::GetUniqueNetIdOf(APlayerController* Playe
 		if (!IsValid(RemoteNetConnection))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Leaving player has no valid remote connection."));
+			return FUniqueNetIdRepl();
 		}
 		UniqueNetIdRepl = RemoteNetConnection->PlayerId;
 	}
