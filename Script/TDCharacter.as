@@ -33,7 +33,7 @@
     void BeginPlay()
     {
         PlayerController = Cast<APlayerController>(Controller);
-        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);
+        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);  // TODO: Change when we can test with enemies
 
         HealthSystemComponent.OnHealthChanged.BindUFunction(this, n"OnHealthChanged");
         Print(f"Character {GetName()} has spawned!");
@@ -42,7 +42,7 @@
     UFUNCTION(BlueprintOverride)
     void EndPlay(EEndPlayReason EndPlayReason)
     {
-        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Monster);
+        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Monster); // TODO: Change when we can test with enemies
     }
 
     UFUNCTION(BlueprintOverride)
