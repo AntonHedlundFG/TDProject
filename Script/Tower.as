@@ -40,6 +40,7 @@
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, ReplicatedUsing = OnRep_IsBuilt, Transient, Category = "Tower")
     bool bIsBuilt = false;
 
+    // Target tracking variables
     AActor Target;
     FVector TargetLocation;
     FVector TargetPredictedLocation;
@@ -122,7 +123,7 @@
             return;
         }
         AActor ClosestEnemy = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation());
-        if(IsValid(ClosestEnemy))
+       if(IsValid(ClosestEnemy))
         {
             Target = ClosestEnemy;
             if(bShouldTrackTarget)
@@ -154,6 +155,8 @@
             // If the target hasn't moved, there's no need to update the aim
             if(Direction.IsNearlyZero())
             {
+                TargetPredictedLocation = TargetNewLocation;
+                TargetLocation = TargetNewLocation;
                 return;
             }
 
