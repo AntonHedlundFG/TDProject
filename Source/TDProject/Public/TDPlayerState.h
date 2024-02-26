@@ -17,7 +17,16 @@ class TDPROJECT_API ATDPlayerState : public APlayerState
 public:
 
 	virtual void CopyProperties(APlayerState* PlayerState) override;
+	virtual void BeginPlay() override;
 
 	UPROPERTY()
 	FString UniqueOwnerNetID;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	int Gold = 0;
+
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0))
+	int StartingGold = 1000;
 };
