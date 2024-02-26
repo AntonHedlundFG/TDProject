@@ -1,5 +1,8 @@
 class ATDEnemy : AActor
 {
+    default bReplicates = true;
+    default bReplicateMovement = true;
+
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
     UPROPERTY(DefaultComponent)
@@ -8,6 +11,7 @@ class ATDEnemy : AActor
     UHealthSystemComponent HealthComponent;
     UPROPERTY()
     USplineComponent Path;
+
 
     UPROPERTY(BlueprintReadWrite)
     float MoveSpeed = 500;
