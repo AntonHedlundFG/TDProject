@@ -26,6 +26,27 @@ class UObjectRegistry : UGameInstanceSubsystem
         return ObjectLists[Type].Objects;
     }
 
+    AActor GetClosestActorOfType(ERegisteredObjectTypes Type, FVector Location)
+    {
+        TArray<UObject> Objects = GetAllObjectsOfType(Type);
+        if (Objects.IsEmpty())
+            return nullptr;
+
+        AActor Closest = Cast<AActor>(Objects[0]);
+        float MinDistance = MAX_flt;
+        for (int i = 1; i < Objects.Num(); i++)
+        {
+            AActor Current = Cast<AActor>(Objects[i]);
+            float Distance = Location.Distance(Closest.GetActorLocation());
+            if (Distance < MinDistance)
+            {
+                MinDistance = Distance;
+                Closest = Current;
+            }
+        }
+        return Closest;
+    }
+
 }
 
 enum ERegisteredObjectTypes
