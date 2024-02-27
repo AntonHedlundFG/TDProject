@@ -70,6 +70,9 @@ class ATDEnemy : AActor
             OnGoalReached.Broadcast(this);
             IsActive = false;
             LerpAlpha = 0;
+            /////
+            this.DestroyActor();
+            /////
             return;
         }
 

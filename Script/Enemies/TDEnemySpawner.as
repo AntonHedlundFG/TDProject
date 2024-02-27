@@ -6,6 +6,9 @@ class ATDEnemySpawner : AActor
     UPROPERTY(DefaultComponent)
     USplineComponent Path;
 
+    UPROPERTY()
+    UTDGameLoopManager LoopManager;
+
     UPROPERTY(Category = "Spawner Settings")
     TArray<TSubclassOf<ATDEnemy>> Enemies;
 
@@ -13,21 +16,25 @@ class ATDEnemySpawner : AActor
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        SpawnEnemy(Enemies[0]);
+        LoopManager = UTDGameLoopManager::Get();
+        if(LoopManager != nullptr)
+            LoopManager.Spawners.Add(this);
+        SpawnEnemy(0);
     }
 
-    void SpawnEnemy(TSubclassOf<ATDEnemy> enemy)
+    void SpawnEnemy(int index)
     {
         if(!System::IsServer()) return;
 
-        if(enemy == nullptr) return;
+        if(Enemies[index] == nullptr) return;
          
         FVector pos = GetActorLocation();
         FRotator rot = GetActorRotation();
-        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
+        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(Enemies[index], pos, rot));
 
         SpawnedEnemy.OnUnitSpawn(Path);
 
-        SpawnedEnemy.OnGoalReached.AddUFunction(UTDGameLoopManager::Get(), n"LooseHealth");
+        if(LoopManager != nullptr)
+            SpawnedEnemy.OnGoalReached.AddUFunction(LoopManager, n"LooseHealth");
     }
 };
