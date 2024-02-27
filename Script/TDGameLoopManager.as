@@ -68,7 +68,9 @@ class UTDGameLoopManager : UScriptWorldSubsystem
     UFUNCTION()
     void SpawnAtInterval(float DeltaTime)
     {
-        if(Spawners.Num() <= 0) return;
+        if(!System::IsServer()) return;
+
+        if(Spawners.Num() <= 0 || CurrentHealth <= 0) return;
 
         SpawnTimer += DeltaTime;
         if(SpawnTimer >= SpawnInterval)
