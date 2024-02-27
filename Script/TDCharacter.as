@@ -29,13 +29,30 @@
     UPROPERTY(DefaultComponent)
     UHealthSystemComponent HealthSystemComponent;
 
+    UPROPERTY()
+    UHealthBarWidget HealthBarWidget;
+    UPROPERTY()
+    TSubclassOf<UHealthBarWidget> HealthBarWidgetClass;
+
+
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
         PlayerController = Cast<APlayerController>(Controller);
         UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);  // TODO: Change when we can test with enemies
 
-        HealthSystemComponent.OnHealthChanged.BindUFunction(this, n"OnHealthChanged");
+        HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
+        TArray<UUserWidget> FoundWidgets;
+        Widget::GetAllWidgetsOfClass(FoundWidgets, HealthBarWidgetClass, false);
+        if (FoundWidgets.Num() > 0)
+        {
+            HealthBarWidget = Cast<UHealthBarWidget>(FoundWidgets[0]);
+            if(IsValid(HealthBarWidget)){
+                Print("HealthBarWidget is valid");
+            }
+        }
+        
     }
 
     UFUNCTION(BlueprintOverride)
@@ -87,7 +104,7 @@
     }    
 
     UFUNCTION(BlueprintCallable)
-    void OnHealthChanged(float Health, float MaxHealth)
+    void OnHealthChanged(int32 Health, int32 MaxHealth)
     {
         if (Health <= 0)
         {
