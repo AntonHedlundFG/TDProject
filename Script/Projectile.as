@@ -16,7 +16,7 @@ class AProjectile : AActor
     float LifeTimeMax = 5.0f;
 
     UPROPERTY()
-    float Damage = 1.0f;
+    int32 Damage = 1.0f;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
