@@ -5,6 +5,8 @@ class ATDEnemySpawner : AActor
 
     UPROPERTY(DefaultComponent)
     USplineComponent Path;
+    UPROPERTY(DefaultComponent)
+    URoadMeshComponent RoadMesh;
 
     UPROPERTY()
     UTDGameLoopManager LoopManager;
