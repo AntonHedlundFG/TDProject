@@ -24,20 +24,10 @@
     UPROPERTY()
     APlayerController PlayerController;
 
-    // Health
-    UPROPERTY(DefaultComponent)
-    UHealthSystemComponent HealthSystemComponent;
-    UPROPERTY()
-    UHealthBarWidget HealthBarWidget;
-    UPROPERTY()
-    TSubclassOf<UHealthBarWidget> HealthBarWidgetClass;
-
     // Object Registry
     UObjectRegistry ObjectRegistry;
     UPROPERTY(EditDefaultsOnly, Category = "Object Registry")
     ERegisteredObjectTypes RegisteredObjectType = ERegisteredObjectTypes::ERO_Player;
-
-
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -52,8 +42,6 @@
         {
             Print("Object Registry is not valid");
         }
-
-        HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
         
     }
 
@@ -107,23 +95,5 @@
             AddControllerPitchInput(Pitch);
         }
     }    
-
-    UFUNCTION(BlueprintCallable)
-    void OnHealthChanged(int32 Health, int32 MaxHealth)
-    {
-        if (Health <= 0)
-        {
-            // Death Logic Here
-            DisableInput(PlayerController);
-        }
-        if(System::IsServer())
-        {
-            // Server Logic Here
-        }
-        else
-        {
-            // Client Logic Here
-        }
-    }
 
 }

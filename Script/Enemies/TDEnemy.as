@@ -17,7 +17,14 @@ class ATDEnemy : AActor
     UPROPERTY(DefaultComponent)
     USkeletalMeshComponent Mesh;
     UPROPERTY(DefaultComponent)
-    UHealthSystemComponent HealthComponent;
+    UHealthSystemComponent HealthSystemComponent;
+    UPROPERTY(DefaultComponent)
+    UCapsuleComponent CapsuleComponent;
+    default CapsuleComponent.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    default CapsuleComponent.SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
+    default CapsuleComponent.SetGenerateOverlapEvents(true);
+    default CapsuleComponent.SetCapsuleHalfHeight(88);
+    default CapsuleComponent.SetCapsuleRadius(34);
     UPROPERTY()
     USplineComponent Path;
 
@@ -38,7 +45,6 @@ class ATDEnemy : AActor
     UPROPERTY(EditDefaultsOnly, Category = "Object Registry")
     ERegisteredObjectTypes RegisteredObjectType = ERegisteredObjectTypes::ERO_Monster;
 
-
     UPROPERTY(NotEditable)
     float LerpAlpha = 0;
 
@@ -54,6 +60,8 @@ class ATDEnemy : AActor
         {
             Print("Object Registry is not valid");
         }
+
+        HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
     }
 
     UFUNCTION(BlueprintOverride)
@@ -114,8 +122,29 @@ class ATDEnemy : AActor
         float distance = Math::Lerp(0, Length, LerpAlpha);
 
         FTransform tf = Path.GetTransformAtDistanceAlongSpline(distance, ESplineCoordinateSpace::World);
+        tf.Location = FVector(tf.Location.X, tf.Location.Y, tf.Location.Z + CapsuleComponent.CapsuleHalfHeight);
 
         SetActorLocation(tf.Location);
         SetActorRotation(tf.Rotation);
     }
+
+    
+    UFUNCTION(BlueprintCallable)
+    void OnHealthChanged(int32 Health, int32 MaxHealth)
+    {
+        if (Health <= 0)
+        {
+            // Death Logic Here
+            OnEnemyDeath.Broadcast(this);
+        }
+        if(System::IsServer())
+        {
+            // Server Logic Here
+        }
+        else
+        {
+            // Client Logic Here
+        }
+    }
+
 };

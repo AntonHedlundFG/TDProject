@@ -3,6 +3,14 @@ class UHealthBarWidget : UUserWidget
     UFUNCTION(BlueprintCallable, Category = "HealthBar")
     void UpdateHealthBar(int32 HealthValue, int32 MaxHealthValue)
     {
+
+        // Careful not to divide by zero
+        if (MaxHealthValue == 0)
+        {
+            Print("MaxHealthValue is zero! Cannot calculate health percentage!");
+            return;
+        }
+
         // Calculate the percentage of health remaining in the range 0..1
         float HealthPercentage = float(HealthValue) / float(MaxHealthValue);
         SetHealthBarPercentage(HealthPercentage);
