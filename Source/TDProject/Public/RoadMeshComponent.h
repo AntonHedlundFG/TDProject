@@ -16,21 +16,30 @@ class TDPROJECT_API URoadMeshComponent : public UProceduralMeshComponent
 	
 public:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = RoadMesh)
 	class USplineComponent* SplineRef;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = RoadMesh)
 	class UMaterial* MaterialRef;
+
+	UPROPERTY(VisibleAnywhere, Category = RoadMesh)
+	TArray<FVector2D> TempUVs;
 
 protected:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RoadMesh)
 	float LengthPerPoint = 100.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RoadMesh)
 	float RoadWidth = 100.0f;
 
-	UFUNCTION(CallInEditor)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RoadMesh)
+	float RoadHeight = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RoadMesh)
+	float EdgeWidth = 10.0f;
+
+	UFUNCTION(CallInEditor, Category = RoadMesh)
 	void GenerateMeshFromSpline();
 
 	TArray<FVector> GeneratePointsAlongPath() const;
