@@ -88,11 +88,12 @@ class ATDEnemy : AActor
     }
 
     UFUNCTION()
-    void OnUnitDeath()
+    void EnemyDeath()
     {
         Path = nullptr;
         IsActive = false;
         OnEnemyDeath.Broadcast(this);
+        DestroyActor();
     }
 
     UFUNCTION()
@@ -112,7 +113,7 @@ class ATDEnemy : AActor
             IsActive = false;
             LerpAlpha = 0;
             /////
-            this.DestroyActor();
+            DestroyActor();
             /////
             return;
         }
@@ -134,16 +135,7 @@ class ATDEnemy : AActor
     {
         if (Health <= 0)
         {
-            // Death Logic Here
-            OnEnemyDeath.Broadcast(this);
-        }
-        if(System::IsServer())
-        {
-            // Server Logic Here
-        }
-        else
-        {
-            // Client Logic Here
+            EnemyDeath();
         }
     }
 
