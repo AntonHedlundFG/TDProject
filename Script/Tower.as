@@ -34,6 +34,9 @@
     UPROPERTY(Category = "Tower")
     TSubclassOf<AProjectile> ProjectileClass;
 
+    UPROPERTY(Category = "Debug")
+    bool bDebugTracking = false;
+
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent FirePoint;
 
@@ -43,6 +46,7 @@
     // Target tracking variables
     AActor Target;
     FVector TargetLocation;
+    FVector TargetVelocity;
     FVector TargetPredictedLocation;
     float TargetTrackedTime;
     float ProjectileSpeedSquared;
@@ -68,6 +72,29 @@
         }
     }
 
+    UFUNCTION(BlueprintOverride)
+    void Tick(float DeltaSeconds)
+    {
+        if ( bDebugTracking && System::IsServer() && bIsBuilt && bShouldTrackTarget )
+        {
+            System::DrawDebugArrow(
+                FirePoint.GetWorldLocation(),
+                TargetPredictedLocation,
+                10.0f,
+                FLinearColor::Red,
+                0.0f,
+                1.0f );
+
+            System::DrawDebugArrow(
+                TargetLocation,
+                TargetPredictedLocation,
+                10.0f,
+                FLinearColor::Red,
+                0.0f,
+                1.0f );    
+            }
+    }
+
     UFUNCTION()
     private void Interact(APlayerController User)
     {
@@ -80,6 +107,11 @@
     {
         if (ProjectileClass != nullptr)
         {
+            if(bShouldTrackTarget)
+            {
+                TrackTarget();
+            }
+            
             FRotator Rotation = (TargetPredictedLocation - FirePoint.GetWorldLocation()).Rotation();
             AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), Rotation));
 
@@ -116,7 +148,7 @@
             return;
         }
         AActor ClosestEnemy = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation());
-       if(IsValid(ClosestEnemy))
+        if(IsValid(ClosestEnemy))
         {
             Target = ClosestEnemy;
             if(bShouldTrackTarget)
@@ -159,7 +191,10 @@
             TargetTrackedTime = CurrentTime;
 
             // Calculate the target's velocity and the cosine of the angle between the direction to the target and the target's velocity
-            FVector TargetVelocity = DistanceSinceLastUpdate / TimeSinceLastUpdate;
+            if(TimeSinceLastUpdate > 0)
+            {
+                TargetVelocity = DistanceSinceLastUpdate / TimeSinceLastUpdate;
+            }
             float CosTheta = Direction.DotProduct((GetActorLocation() - TargetNewLocation).GetSafeNormal());
 
             // Calculate the time to intercept assuming the target continues in a straight line at constant velocity
