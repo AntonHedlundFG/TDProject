@@ -1,7 +1,5 @@
 ﻿class ATDCharacter : ACharacter
 {
-
-
     // Input
     UPROPERTY(Category = "Input")
     UInputMappingContext IMC;
@@ -26,13 +24,18 @@
     UPROPERTY()
     APlayerController PlayerController;
 
+    // Health
     UPROPERTY(DefaultComponent)
     UHealthSystemComponent HealthSystemComponent;
-
     UPROPERTY()
     UHealthBarWidget HealthBarWidget;
     UPROPERTY()
     TSubclassOf<UHealthBarWidget> HealthBarWidgetClass;
+
+    // Object Registry
+    UObjectRegistry ObjectRegistry;
+    UPROPERTY(EditDefaultsOnly, Category = "Object Registry")
+    ERegisteredObjectTypes RegisteredObjectType = ERegisteredObjectTypes::ERO_Player;
 
 
 
@@ -40,7 +43,15 @@
     void BeginPlay()
     {
         PlayerController = Cast<APlayerController>(Controller);
-        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_Monster);  // TODO: Change when we can test with enemies
+        ObjectRegistry = UObjectRegistry::Get();
+        if(IsValid(ObjectRegistry)) 
+        {
+            ObjectRegistry.RegisterObject(this, RegisteredObjectType);
+        }
+        else
+        {
+            Print("Object Registry is not valid");
+        }
 
         HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
         
@@ -48,8 +59,11 @@
 
     UFUNCTION(BlueprintOverride)
     void EndPlay(EEndPlayReason EndPlayReason)
-    {
-        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_Monster); // TODO: Change when we can test with enemies
+    {        
+        if(IsValid(ObjectRegistry)) 
+        {
+            ObjectRegistry.DeregisterObject(this, RegisteredObjectType); // TODO: Change when we can test with enemies
+        }
     }
 
     UFUNCTION(BlueprintOverride)

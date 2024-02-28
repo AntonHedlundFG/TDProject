@@ -33,9 +33,37 @@ class ATDEnemy : AActor
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     bool IsActive = false;
 
+    // Object Registry
+    UObjectRegistry ObjectRegistry;
+    UPROPERTY(EditDefaultsOnly, Category = "Object Registry")
+    ERegisteredObjectTypes RegisteredObjectType = ERegisteredObjectTypes::ERO_Monster;
+
+
     UPROPERTY(NotEditable)
     float LerpAlpha = 0;
 
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        ObjectRegistry = UObjectRegistry::Get();
+        if(IsValid(ObjectRegistry)) 
+        {
+            ObjectRegistry.RegisterObject(this, RegisteredObjectType);
+        }
+        else
+        {
+            Print("Object Registry is not valid");
+        }
+    }
+
+    UFUNCTION(BlueprintOverride)
+    void EndPlay(EEndPlayReason EndPlayReason)
+    {
+        if(IsValid(ObjectRegistry)) 
+        {
+            ObjectRegistry.DeregisterObject(this, RegisteredObjectType); // TODO: Change when we can test with enemies
+        }
+    }
 
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
