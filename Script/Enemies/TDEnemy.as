@@ -10,7 +10,6 @@ class ATDEnemy : AActor
 
     FOnEnemySpawnEvent OnEnemySpawn;
     FOnEnemyDeathEvent OnEnemyDeath;
-    FOnEnemyGoalReachedEvent OnGoalReached;
     
 
     UPROPERTY(DefaultComponent, RootComponent)
@@ -27,6 +26,8 @@ class ATDEnemy : AActor
     int PointValue = 1;
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     int KillBounty = 1;
+    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    int Damage = 1;
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     float MoveSpeed = 500;
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
@@ -67,7 +68,11 @@ class ATDEnemy : AActor
         if(LerpAlpha >= 1.f)
         {
             Print("Goal Reached");
-            OnGoalReached.Broadcast(this);
+            ATDGameMode gameMode = Cast<ATDGameMode>(Gameplay::GetGameMode());
+            if(gameMode != nullptr)
+            {
+                gameMode.OnEnemyReachedGoal(this);
+            }
             IsActive = false;
             LerpAlpha = 0;
             /////

@@ -7,9 +7,9 @@ class ATDEnemySpawner : AActor
     USplineComponent Path;
     UPROPERTY(DefaultComponent)
     URoadMeshComponent RoadMesh;
-
+    
     UPROPERTY()
-    UTDGameLoopManager LoopManager;
+    ATDGameMode GameMode;
 
     UPROPERTY(Category = "Spawner Settings")
     TArray<TSubclassOf<ATDEnemy>> Enemies;
@@ -18,10 +18,9 @@ class ATDEnemySpawner : AActor
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        LoopManager = UTDGameLoopManager::Get();
-        if(LoopManager != nullptr)
-            LoopManager.Spawners.Add(this);
-        SpawnEnemy(0);
+        GameMode = Cast<ATDGameMode>(Gameplay::GetGameMode());
+        if(IsValid(GameMode))
+            GameMode.RegisterSpawner(this);
     }
 
     void SpawnEnemy(int index)
@@ -36,7 +35,5 @@ class ATDEnemySpawner : AActor
 
         SpawnedEnemy.OnUnitSpawn(Path);
 
-        if(LoopManager != nullptr)
-            SpawnedEnemy.OnGoalReached.AddUFunction(LoopManager, n"LooseHealth");
     }
 };

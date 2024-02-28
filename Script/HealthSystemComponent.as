@@ -1,13 +1,13 @@
 
 
-event void HealthChanged(int32 CurrentHealth, int32 MaxHealth);
+event void FHealthChanged(int32 CurrentHealth, int32 MaxHealth);
 
 class UHealthSystemComponent : UActorComponent
 {
     default bReplicates = true;
 
     UPROPERTY(BlueprintReadWrite, Replicated)
-    HealthChanged OnHealthChanged;
+    FHealthChanged OnHealthChanged;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
     int32 MaxHealth;
