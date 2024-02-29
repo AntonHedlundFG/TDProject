@@ -146,7 +146,8 @@
         {
             return;
         }
-        AActor ClosestEnemy = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation());
+
+        AActor ClosestEnemy = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), Range);
         if(IsValid(ClosestEnemy))
         {
             Target = ClosestEnemy;
