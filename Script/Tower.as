@@ -44,6 +44,7 @@
     bool bIsBuilt = false;
 
     // Target tracking variables
+    UPROPERTY(Replicated)
     AActor Target;
     FVector TargetLocation;
     FVector TargetVelocity;
@@ -141,7 +142,7 @@
     UFUNCTION()
     void UpdateTarget()
     {
-        if(!bIsBuilt ||!bShouldTrackTarget)
+        if(!System::IsServer() && (!bIsBuilt ||!bShouldTrackTarget))
         {
             return;
         }
