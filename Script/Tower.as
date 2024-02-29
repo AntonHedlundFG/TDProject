@@ -44,6 +44,10 @@
     bool bIsBuilt = false;
 
     // Target tracking variables
+    UPROPERTY(EditAnywhere, Category = "Tower")
+    float TrackingUpdateRate = 0.1f;
+    UPROPERTY(EditAnywhere, Category = "Tower") 
+    bool bKeepTarget = false; // Keep target until it's out of range
     UPROPERTY(Replicated)
     AActor Target;
     FVector TargetLocation;
@@ -53,7 +57,7 @@
 
     FRotator TargetRotation;
 
-    UPROPERTY(Category = "Tower")
+    UPROPERTY(NotVisible)
     bool bProjectileUsesGravity = false;
     const float Gravity = 9810.0f;
 
@@ -105,7 +109,7 @@
     UFUNCTION()
     void Fire()
     {
-        if (ProjectileClass != nullptr)
+        if (ProjectileClass != nullptr && IsValid(Target) && bIsBuilt)
         {
             if(bShouldTrackTarget)
             {
@@ -134,7 +138,8 @@
             System::SetTimer(this, n"Fire", FireRate, true);
             if(bShouldTrackTarget)
             {
-                System::SetTimer(this, n"UpdateTarget", 0.1f, true);
+                System::SetTimer(this, n"UpdateTarget", TrackingUpdateRate, true);
+                System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
             }
         }          
     }
@@ -147,14 +152,15 @@
             return;
         }
 
+        if(bKeepTarget && IsValid(Target) && (Target.GetActorLocation() - FirePoint.GetWorldLocation()).Size() < Range)
+        {
+            return;
+        }
+
         AActor ClosestEnemy = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), Range);
         if(IsValid(ClosestEnemy))
         {
             Target = ClosestEnemy;
-            if(bShouldTrackTarget)
-            {
-                TrackTarget();
-            }
         }
 
     }
