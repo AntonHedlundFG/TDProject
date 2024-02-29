@@ -47,9 +47,14 @@
     AActor Target;
     FVector TargetLocation;
     FVector TargetVelocity;
-    FVector TargetPredictedLocation;
     float TargetTrackedTime;
     float ProjectileSpeedSquared;
+
+    FRotator TargetRotation;
+
+    UPROPERTY(Category = "Tower")
+    bool bProjectileUsesGravity = false;
+    const float Gravity = 9810.0f;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -68,6 +73,7 @@
         {
             AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FVector::ZeroVector, FRotator::ZeroRotator));
             ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
+            bProjectileUsesGravity = Projectile.bIsAffectedByGravity;
             Projectile.DestroyActor();
         }
     }
@@ -79,20 +85,13 @@
         {
             System::DrawDebugArrow(
                 FirePoint.GetWorldLocation(),
-                TargetPredictedLocation,
+                FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * Range,
                 10.0f,
                 FLinearColor::Red,
                 0.0f,
                 1.0f );
+        }
 
-            System::DrawDebugArrow(
-                TargetLocation,
-                TargetPredictedLocation,
-                10.0f,
-                FLinearColor::Red,
-                0.0f,
-                1.0f );    
-            }
     }
 
     UFUNCTION()
@@ -112,8 +111,7 @@
                 TrackTarget();
             }
             
-            FRotator Rotation = (TargetPredictedLocation - FirePoint.GetWorldLocation()).Rotation();
-            AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), Rotation));
+            AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), TargetRotation));
 
             AStaticAOEProjectile StaticAOEProjectile = Cast<AStaticAOEProjectile>(Projectile);
             if(IsValid(StaticAOEProjectile)) // TODO: Replace with a better solution
@@ -180,8 +178,6 @@
             // If the target hasn't moved, there's no need to update the aim
             if(Direction.IsNearlyZero())
             {
-                TargetPredictedLocation = TargetNewLocation;
-                TargetLocation = TargetNewLocation;
                 return;
             }
 
@@ -215,21 +211,32 @@
 
             if (T > 0)
             {
-                TargetPredictedLocation = TargetNewLocation + TargetVelocity * T; // Aim at the predicted location
-            }
-            else
-            {
-                TargetPredictedLocation = TargetNewLocation; // No solution, just aim at the current location
-            }
 
+                FVector Dir;
+
+                if(bProjectileUsesGravity)
+                {                    
+                    // Vb = Vt - 0.5*Ab*t + [(Pti - Pbi) / t]     
+                    FVector GravityVector = FVector(0.0f, 0.0f, -Gravity);
+                    Dir = (TargetVelocity - GravityVector * T * 0.5f + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
+                }   
+                else
+                {                 
+                    // Vb = Vt + [(Pti - Pbi) / t]
+                    Dir = (TargetVelocity + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
+                }
+
+                TargetRotation = Dir.Rotation();
+
+            }
         }
         else
         {
             UpdateTarget();
         }
 
+        // Save the target's location for the next update
         TargetLocation = TargetNewLocation;
     }
-
 
 };

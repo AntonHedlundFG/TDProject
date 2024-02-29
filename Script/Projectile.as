@@ -9,14 +9,23 @@ class AProjectile : AActor
     UStaticMeshComponent Mesh;
     default Mesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    UPROPERTY()
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     float Speed = 1000.0f;
 
-    UPROPERTY()
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     float LifeTimeMax = 5.0f;
 
-    UPROPERTY()
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     int32 Damage = 1.0f;
+
+    UPROPERTY(VisibleAnywhere, Category = "Projectile")
+    bool bIsHoming = false;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    bool bIsAffectedByGravity = false;
+
+    const float Gravity = 9810.0f;
+
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -64,6 +73,8 @@ class ATrackingProjectile : AProjectile
 {
     UPROPERTY(Replicated)
     AActor Target;
+
+    default bIsHoming = true;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -127,6 +138,11 @@ class ANonTrackingProjectile : AProjectile
     default Mesh.SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
     default Mesh.SetGenerateOverlapEvents(true);
 
+    UPROPERTY(NotVisible, Replicated)
+    FVector ProjectileVelocity;
+
+    default bIsHoming = false;
+
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()
     {
@@ -137,10 +153,24 @@ class ANonTrackingProjectile : AProjectile
     }
 
     UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        Super::BeginPlay();
+
+        ProjectileVelocity = ActorForwardVector * Speed;
+        
+    }
+
+    UFUNCTION(BlueprintOverride)
     void Move(float DeltaSeconds) override
     {
+        // Apply gravity if this projectile is affected by it
+        if (bIsAffectedByGravity)
+        {
+            ProjectileVelocity.Z -= Gravity * DeltaSeconds;
+        }
         // Basic movement for non-tracking projectiles
-        ActorLocation += ActorForwardVector * Speed * DeltaSeconds;
+        ActorLocation += ProjectileVelocity * DeltaSeconds;
     }
 
     UFUNCTION()
