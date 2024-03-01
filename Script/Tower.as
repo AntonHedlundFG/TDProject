@@ -6,12 +6,18 @@
     USceneComponent Root;
 
     UPROPERTY(DefaultComponent, Attach = Root)
+    USceneComponent FinishedMeshRoot;
+    default FinishedMeshRoot.bVisible = false;
+    UPROPERTY(DefaultComponent, Attach = FinishedMeshRoot)
     UStaticMeshComponent FinishedMesh;
-    default FinishedMesh.bVisible = true;
+    default FinishedMesh.bVisible = false;
 
     UPROPERTY(DefaultComponent, Attach = Root)
+    USceneComponent PreviewMeshRoot;
+    default PreviewMeshRoot.bVisible = true;
+    UPROPERTY(DefaultComponent, Attach = PreviewMeshRoot)
     UStaticMeshComponent PreviewMesh;
-    default PreviewMesh.bVisible = false;
+    default PreviewMesh.bVisible = true;
 
     UPROPERTY(DefaultComponent)
     UPricedInteractableComponent InteractableComp;
@@ -46,16 +52,21 @@
     // Target tracking variables
     UPROPERTY(EditAnywhere, Category = "Tower")
     float TrackingUpdateRate = 0.1f;
+    // Keep target until it's out of range
     UPROPERTY(EditAnywhere, Category = "Tower") 
-    bool bKeepTarget = false; // Keep target until it's out of range
+    bool bKeepTarget = false; 
     UPROPERTY(Replicated)
     AActor Target;
     FVector TargetLocation;
     FVector TargetVelocity;
     float TargetTrackedTime;
     float ProjectileSpeedSquared;
-
+    UPROPERTY(Replicated)
     FRotator TargetRotation;
+    // Degrees per second
+    UPROPERTY(EditAnywhere, Category = "Tower")
+    float RotationSpeedXAxis = 0.0f;
+
 
     UPROPERTY(NotVisible)
     bool bProjectileUsesGravity = false;
@@ -86,16 +97,31 @@
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
-        if ( bDebugTracking && System::IsServer() && bIsBuilt && bShouldTrackTarget )
+
+        if(!bIsBuilt)
         {
-            System::DrawDebugArrow(
-                FirePoint.GetWorldLocation(),
-                FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * Range,
-                10.0f,
-                FLinearColor::Red,
-                0.0f,
-                1.0f );
+            return;
         }
+
+        if(bShouldTrackTarget && IsValid(Target))
+        {
+            if(RotationSpeedXAxis > 0)
+            {
+                RotateToTarget(DeltaSeconds);
+            }
+
+            if ( bDebugTracking )
+            {
+                System::DrawDebugArrow(
+                    FirePoint.GetWorldLocation(),
+                    FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * Range,
+                    10.0f,
+                    FLinearColor::Red,
+                    0.0f,
+                    1.0f );
+            }
+        }
+
 
     }
 
@@ -130,9 +156,7 @@
     UFUNCTION()
     void OnRep_IsBuilt()
     {
-        FinishedMesh.SetVisibility(bIsBuilt);
-        PreviewMesh.SetVisibility(!bIsBuilt);
-
+        // On server : Start firing and tracking timers if the tower is built
         if (System::IsServer() && bIsBuilt)
         {
             System::SetTimer(this, n"Fire", FireRate, true);
@@ -142,6 +166,8 @@
                 System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
             }
         }          
+        // On every client : Toggle the visibility of the meshes
+        ToggleVisibleMesh();
     }
 
     UFUNCTION()
@@ -245,6 +271,40 @@
 
         // Save the target's location for the next update
         TargetLocation = TargetNewLocation;
+    }
+
+    UFUNCTION()
+    void ToggleVisibleMesh()
+    {
+
+            FinishedMeshRoot.SetVisibility(bIsBuilt);
+            TArray<USceneComponent> Children;
+            FinishedMeshRoot.GetChildrenComponents(true, Children);
+            for (int i = 0; i < Children.Num(); i++)
+            {
+                Children[i].SetVisibility(FinishedMeshRoot.IsVisible());
+            }
+
+            PreviewMeshRoot.SetVisibility(!bIsBuilt);
+
+            Children.Empty();
+            PreviewMeshRoot.GetChildrenComponents(true, Children);
+            for (int i = 0; i < Children.Num(); i++)
+            {
+                Children[i].SetVisibility(PreviewMeshRoot.IsVisible());
+            }
+        
+    }
+
+    UFUNCTION()
+    void RotateToTarget(float DeltaSeconds)
+    {
+        FRotator TargetRot = TargetRotation;
+        TargetRot.Pitch = 0.0f;
+        TargetRot.Roll = 0.0f;
+
+        FRotator NewRot = Math::RInterpTo(GetActorRotation(), TargetRot, DeltaSeconds, RotationSpeedXAxis);
+        SetActorRotation(NewRot);
     }
 
 };
