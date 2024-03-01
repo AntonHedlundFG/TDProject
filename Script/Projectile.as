@@ -1,4 +1,4 @@
-class AProjectile : AActor
+class AProjectile : APoolableActor
 {
     default bReplicates = true;
 
@@ -25,12 +25,14 @@ class AProjectile : AActor
     bool bIsAffectedByGravity = false;
 
     const float Gravity = 9810.0f;
+    
+    FTimerHandle DespawnTimer;
 
 
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
+    UFUNCTION()
+    void Shoot()
     {
-        System::SetTimer(this, n"Despawn", LifeTimeMax, false);
+        DespawnTimer = System::SetTimer(this, n"Despawn", LifeTimeMax, false);
     }
 
     UFUNCTION(BlueprintOverride)
@@ -46,7 +48,8 @@ class AProjectile : AActor
     UFUNCTION(BlueprintEvent)
     void Despawn() 
     {
-        DestroyActor();
+        System::ClearAndInvalidateTimerHandle(DespawnTimer);
+        ReturnToPool();
     };
 
     UFUNCTION(BlueprintEvent)
@@ -76,10 +79,9 @@ class ATrackingProjectile : AProjectile
 
     default bIsHoming = true;
 
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
+    void Shoot() override
     {
-        Super::BeginPlay();
+        Super::Shoot();
         if (System::IsServer())
         {
             float BestDist = MAX_flt;
@@ -152,13 +154,11 @@ class ANonTrackingProjectile : AProjectile
         }
     }
 
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
+    void Shoot() override
     {
-        Super::BeginPlay();
+        Super::Shoot();
 
         ProjectileVelocity = ActorForwardVector * Speed;
-        
     }
 
     UFUNCTION(BlueprintOverride)
@@ -188,10 +188,9 @@ class AStaticAOEProjectile : AProjectile
     UPROPERTY()
     float Range = 1000.0f;
 
-    UFUNCTION(BlueprintOverride)
-    void BeginPlay()
+    void Shoot() override
     {
-        Super::BeginPlay();
+        Super::Shoot();
         if (System::IsServer())
         {
             float BestDist = MAX_flt;

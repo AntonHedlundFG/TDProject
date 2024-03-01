@@ -81,6 +81,9 @@
     bool bProjectileUsesGravity = false;
     const float Gravity = 9810.0f;
 
+    UPROPERTY(VisibleAnywhere, Category = "Tower")
+    UObjectPool Pool;
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
@@ -93,14 +96,20 @@
         //Makes sure Mesh visibilities are correct from the start.
         OnRep_IsBuilt();
 
-        // Calculate the speed of the projectile TODO: Replace with a better solution, probably after using a pooling system?
-        if (ProjectileClass != nullptr)
+        Pool = Cast<UObjectPool>(NewObject(this, UObjectPool::StaticClass()));
+        if(IsValid(Pool))
         {
-            AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FVector::ZeroVector, FRotator::ZeroRotator));
-            ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
-            bProjectileUsesGravity = Projectile.bIsAffectedByGravity;
-            Projectile.DestroyActor();
+            Pool.Initialize(ProjectileClass, 10);
+
+            AProjectile Projectile = Cast<AProjectile>(Pool.GetObject());
+            if(IsValid(Projectile))
+            {
+                ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
+                bProjectileUsesGravity = Projectile.bIsAffectedByGravity;
+                Pool.ReturnObject(Projectile);
+            }
         }
+
     }
 
     UFUNCTION(BlueprintOverride)
@@ -150,7 +159,8 @@
 
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             
-            AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), FireRotation));
+            AProjectile Projectile = Cast<AProjectile>(Pool.GetObject(FirePoint.GetWorldLocation(), FireRotation));
+            Projectile.Shoot();
 
             AStaticAOEProjectile StaticAOEProjectile = Cast<AStaticAOEProjectile>(Projectile);
             if(IsValid(StaticAOEProjectile)) // TODO: Replace with a better solution
