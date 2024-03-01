@@ -110,11 +110,8 @@
 
         if(bShouldTrackTarget && IsValid(Target))
         {
-            if(RotationSpeedXAxis > 0)
-            {
-                RotateToTarget(DeltaSeconds);
-            }
-
+            RotateToTarget(DeltaSeconds);
+            
             if ( bDebugTracking )
             {
                 System::DrawDebugArrow(
@@ -305,14 +302,17 @@
 
     UFUNCTION()
     void RotateToTarget(float DeltaSeconds)
-    {
-        FRotator YawRotation = TargetRotation;
-        YawRotation.Pitch = 0.0f;
-        YawRotation.Roll = 0.0f;
+    {            
+        if(RotationSpeedXAxis > 0)
+        {
+            FRotator YawRotation = TargetRotation;
+            YawRotation.Pitch = 0.0f;
+            YawRotation.Roll = 0.0f;
 
-        FRotator NewRot = Math::RInterpTo(GetActorRotation(), YawRotation, DeltaSeconds, RotationSpeedXAxis);
-        SetActorRotation(NewRot);
-
+            FRotator NewRot = Math::RInterpTo(GetActorRotation(), YawRotation, DeltaSeconds, RotationSpeedXAxis);
+            SetActorRotation(NewRot);
+        }
+        
         if ( RotationSpeedYAxis > 0 )
         {
             FRotator MeshRotation = FinishedMesh.GetRelativeRotation();
