@@ -35,9 +35,6 @@
     float FireRate = 1.0f;
 
     UPROPERTY(Category = "Tower")
-    bool bShouldTrackTarget = false;
-
-    UPROPERTY(Category = "Tower")
     TSubclassOf<AProjectile> ProjectileClass;
 
     UPROPERTY(Category = "Debug")
@@ -50,6 +47,11 @@
     bool bIsBuilt = false;
 
     // Target tracking variables
+    UPROPERTY(Category = "Tower")
+    bool bShouldTrackTarget = false;
+    // Percentage of the target's velocity to lead (1 = 100% of the target's velocity, 0 = no lead, -1 = 100% of the target's velocity in the opposite direction)
+    UPROPERTY(EditAnywhere, Category = "Tower")
+    float TrackingLeadPercentage = 0.0f;
     UPROPERTY(EditAnywhere, Category = "Tower")
     float TrackingUpdateRate = 0.1f;
     // Keep target until it's out of range
@@ -63,6 +65,8 @@
     float ProjectileSpeedSquared;
     UPROPERTY(Replicated)
     FRotator TargetRotation;
+
+
     // Degrees per second
     UPROPERTY(EditAnywhere, Category = "Tower")
     float RotationSpeedXAxis = 0.0f;    
@@ -199,6 +203,7 @@
     void TrackTarget()
     {
         // Prediction algorithm from https://www.gamedeveloper.com/programming/predictive-aim-mathematics-for-ai-targeting
+        if(!IsValid(Target)) return;
 
         FVector TargetNewLocation = Target.GetActorLocation();
         float DistanceToTarget = (TargetNewLocation - ActorLocation).Size();
@@ -251,17 +256,19 @@
             {
 
                 FVector Dir;
+                FVector LeadVelocity = TargetVelocity * (1 + TrackingLeadPercentage);
 
                 if(bProjectileUsesGravity)
                 {                    
                     // Vb = Vt - 0.5*Ab*t + [(Pti - Pbi) / t]     
                     FVector GravityVector = FVector(0.0f, 0.0f, -Gravity);
-                    Dir = (TargetVelocity - GravityVector * T * 0.5f + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
+                    Dir = (TargetVelocity + LeadVelocity - GravityVector * T * 0.5f + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
+                    
                 }   
                 else
                 {                 
                     // Vb = Vt + [(Pti - Pbi) / t]
-                    Dir = (TargetVelocity + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
+                    Dir = (TargetVelocity + LeadVelocity + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
                 }
 
                 TargetRotation = Dir.Rotation();
@@ -312,7 +319,7 @@
             FRotator NewRot = Math::RInterpTo(GetActorRotation(), YawRotation, DeltaSeconds, RotationSpeedXAxis);
             SetActorRotation(NewRot);
         }
-        
+
         if ( RotationSpeedYAxis > 0 )
         {
             FRotator MeshRotation = FinishedMesh.GetRelativeRotation();
