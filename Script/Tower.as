@@ -43,7 +43,7 @@
     UPROPERTY(Category = "Debug")
     bool bDebugTracking = false;
 
-    UPROPERTY(DefaultComponent, Attach = Root)
+    UPROPERTY(DefaultComponent, Attach = FinishedMesh)
     USceneComponent FirePoint;
 
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, ReplicatedUsing = OnRep_IsBuilt, Transient, Category = "Tower")
@@ -65,8 +65,13 @@
     FRotator TargetRotation;
     // Degrees per second
     UPROPERTY(EditAnywhere, Category = "Tower")
-    float RotationSpeedXAxis = 0.0f;
-
+    float RotationSpeedXAxis = 0.0f;    
+    // Degrees per second
+    UPROPERTY(EditAnywhere, Category = "Tower")
+    float RotationSpeedYAxis = 0.0f;
+    // Lock fire direction to firepoint forward vector
+    UPROPERTY(EditAnywhere, Category = "Tower")
+    bool bLockFireDirection = false;
 
     UPROPERTY(NotVisible)
     bool bProjectileUsesGravity = false;
@@ -141,8 +146,10 @@
             {
                 TrackTarget();
             }
+
+            FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             
-            AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), TargetRotation));
+            AProjectile Projectile = Cast<AProjectile>(SpawnActor(ProjectileClass, FirePoint.GetWorldLocation(), FireRotation));
 
             AStaticAOEProjectile StaticAOEProjectile = Cast<AStaticAOEProjectile>(Projectile);
             if(IsValid(StaticAOEProjectile)) // TODO: Replace with a better solution
@@ -299,12 +306,22 @@
     UFUNCTION()
     void RotateToTarget(float DeltaSeconds)
     {
-        FRotator TargetRot = TargetRotation;
-        TargetRot.Pitch = 0.0f;
-        TargetRot.Roll = 0.0f;
+        FRotator YawRotation = TargetRotation;
+        YawRotation.Pitch = 0.0f;
+        YawRotation.Roll = 0.0f;
 
-        FRotator NewRot = Math::RInterpTo(GetActorRotation(), TargetRot, DeltaSeconds, RotationSpeedXAxis);
+        FRotator NewRot = Math::RInterpTo(GetActorRotation(), YawRotation, DeltaSeconds, RotationSpeedXAxis);
         SetActorRotation(NewRot);
+
+        if ( RotationSpeedYAxis > 0 )
+        {
+            FRotator MeshRotation = FinishedMesh.GetRelativeRotation();
+            FRotator RollRotation = MeshRotation;
+            RollRotation.Roll = -TargetRotation.Pitch;
+            RollRotation = Math::RInterpTo(MeshRotation, RollRotation, DeltaSeconds, RotationSpeedYAxis);
+            FinishedMesh.SetRelativeRotation(RollRotation);
+
+        }
     }
 
 };
