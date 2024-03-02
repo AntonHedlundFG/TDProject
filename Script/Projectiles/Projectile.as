@@ -24,11 +24,29 @@ class AProjectile : APoolableActor
     UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     bool bIsAffectedByGravity = false;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    TSubclassOf<AExplosion> ExplosionClass;
+
+    UObjectPool ExplosionPool;
+
     const float Gravity = 9810.0f;
     
     FTimerHandle DespawnTimer;
 
     TArray<AActor> HitActors;
+
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        if(ExplosionClass != nullptr)
+        {
+            ExplosionPool = Cast<UObjectPool>(NewObject(this, UObjectPool::StaticClass()));
+            if(IsValid(ExplosionPool))
+            {
+                ExplosionPool.Initialize(ExplosionClass, 1);
+            }
+        }
+    }
 
     UFUNCTION()
     void Shoot()
@@ -66,15 +84,28 @@ class AProjectile : APoolableActor
         {
             return;
         }
-        // Get health component from target
-        UHealthSystemComponent HealthSystem = UHealthSystemComponent::Get(Target);
-        
-        if(IsValid(HealthSystem) && HealthSystem.IsAlive() && !HitActors.Contains(Target))
+
+        if(IsValid(ExplosionPool))
         {
-            HitActors.Add(Target);
-            HealthSystem.TakeDamage(Damage);
+            AExplosion Explosion = Cast<AExplosion>(ExplosionPool.GetObject(GetActorLocation(), FRotator::ZeroRotator));
+            if(IsValid(Explosion))
+            {
+                Explosion.Explode();
+            }
+        }
+        else
+        {        
+            // Get health component from target
+            UHealthSystemComponent HealthSystem = UHealthSystemComponent::Get(Target);
+            
+            if(IsValid(HealthSystem) && HealthSystem.IsAlive() && !HitActors.Contains(Target))
+            {
+                HitActors.Add(Target);
+                HealthSystem.TakeDamage(Damage);
+            }
         }
 
+        
     };
 
 
@@ -92,19 +123,7 @@ class ATrackingProjectile : AProjectile
         Super::Shoot();
         if (System::IsServer())
         {
-            float BestDist = MAX_flt;
-            for (UObject Obj : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster))
-            {
-                AActor Actor = Cast<AActor>(Obj);
-                if (!IsValid(Actor)) continue;
-
-                const float Distance = Actor.ActorLocation.Distance(ActorLocation);
-                if (Distance < BestDist)
-                {
-                    BestDist = Distance;
-                    Target = Actor;
-                }
-            }
+            Target = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, ActorLocation);
         }
     }
 
