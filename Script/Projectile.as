@@ -28,11 +28,14 @@ class AProjectile : APoolableActor
     
     FTimerHandle DespawnTimer;
 
+    TArray<AActor> HitActors;
 
     UFUNCTION()
     void Shoot()
     {
         DespawnTimer = System::SetTimer(this, n"Despawn", LifeTimeMax, false);
+
+        HitActors.Empty();
     }
 
     UFUNCTION(BlueprintOverride)
@@ -48,7 +51,11 @@ class AProjectile : APoolableActor
     UFUNCTION(BlueprintEvent)
     void Despawn() 
     {
+        // DonClear despawn timer
         System::ClearAndInvalidateTimerHandle(DespawnTimer);
+        // Move way out of the way as to not trigger trigger overlap events again
+        SetActorLocation(FVector(-10000.0f, -10000.0f, -10000.0f));
+        // Return to pool
         ReturnToPool();
     };
 
@@ -62,8 +69,9 @@ class AProjectile : APoolableActor
         // Get health component from target
         UHealthSystemComponent HealthSystem = UHealthSystemComponent::Get(Target);
         
-        if(IsValid(HealthSystem))
+        if(IsValid(HealthSystem) && HealthSystem.IsAlive() && !HitActors.Contains(Target))
         {
+            HitActors.Add(Target);
             HealthSystem.TakeDamage(Damage);
         }
 

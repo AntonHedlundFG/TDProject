@@ -58,5 +58,10 @@ class UHealthSystemComponent : UActorComponent
         OnRep_HealthValueChanged();
     }
 
+    UFUNCTION()
+    bool IsAlive()
+    {
+        return CurrentHealth > 0;
+    }
 
 };
