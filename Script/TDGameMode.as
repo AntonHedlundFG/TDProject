@@ -5,19 +5,22 @@
     float SpawnTimer = 0.0f;
 
     // The time between each spawn
-    float SpawnInterval = 1.0f;
+    UPROPERTY(EditAnywhere, Category = "EnemySpawn")
+    float SpawnInterval = 4.0f;
 
     // The time between waves
+    UPROPERTY(EditAnywhere, Category = "EnemySpawn")
     float WaveTime = 10.0f;
 
     // The time until the next wave
     float TimeUntilNextWave = 10.0f;
 
+    // The number of enemies to spawn per wave
+    UPROPERTY(EditAnywhere, Category = "EnemySpawn")
+    int EnemiesPerWave = 10;
+
     // The number of enemies left to spawn
     int NumEnemiesToSpawn = 0;
-
-    // The number of enemies to spawn per wave
-    int EnemiesPerWave = 10;
 
     // Current wave number
     int WaveNumber = 0;
