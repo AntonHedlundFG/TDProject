@@ -33,6 +33,8 @@ class UObjectPool : UObject
             Object = SpawnPoolableActor(true, Location, Rotation);
         }
         
+        Object.SetActorTickEnabled(true);
+        
         return Object;
     }
 
@@ -43,6 +45,7 @@ class UObjectPool : UObject
         if(IsValid(Object))
         {
             Object.SetActorHiddenInGame(true);
+            Object.SetActorTickEnabled(false);
             ObjectPool.Add(Object);
         }
     }
