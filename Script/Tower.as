@@ -58,7 +58,7 @@
     UPROPERTY(EditAnywhere, Category = "Tower") 
     bool bKeepTarget = false; 
     UPROPERTY(Replicated)
-    AActor Target;
+    USceneComponent Target;
     FVector TargetLocation;
     FVector TargetVelocity;
     float TargetTrackedTime;
@@ -196,15 +196,15 @@
             return;
         }
 
-        if(bKeepTarget && IsValid(Target) && (Target.GetActorLocation() - FirePoint.GetWorldLocation()).Size() < Range)
+        if(bKeepTarget && IsValid(Target) && (Target.GetWorldLocation() - FirePoint.GetWorldLocation()).Size() < Range)
         {
             return;
         }
 
-        AActor ClosestEnemy = UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), Range);
+        ATDEnemy ClosestEnemy = Cast<ATDEnemy>(UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), Range));
         if(IsValid(ClosestEnemy))
         {
-            Target = ClosestEnemy;
+            Target = ClosestEnemy.GetTargetComponent();
         }
 
     }
@@ -215,7 +215,7 @@
         // Prediction algorithm from https://www.gamedeveloper.com/programming/predictive-aim-mathematics-for-ai-targeting
         if(!IsValid(Target)) return;
 
-        FVector TargetNewLocation = Target.GetActorLocation();
+        FVector TargetNewLocation = Target.GetWorldLocation();
         float DistanceToTarget = (TargetNewLocation - ActorLocation).Size();
         if(DistanceToTarget > Range)
         {
