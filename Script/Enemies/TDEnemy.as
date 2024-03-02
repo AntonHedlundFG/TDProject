@@ -15,19 +15,11 @@ class ATDEnemy : AActor
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
     UPROPERTY(DefaultComponent)
-    USkeletalMeshComponent Mesh;
+    UStaticMeshComponent Mesh;
     UPROPERTY(DefaultComponent)
     UHealthSystemComponent HealthSystemComponent;
-    UPROPERTY(DefaultComponent)
-    UCapsuleComponent CapsuleComponent;
-    default CapsuleComponent.SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    default CapsuleComponent.SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
-    default CapsuleComponent.SetGenerateOverlapEvents(true);
-    default CapsuleComponent.SetCapsuleHalfHeight(88);
-    default CapsuleComponent.SetCapsuleRadius(34);
     UPROPERTY()
     USplineComponent Path;
-
 
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     int PointValue = 1;
@@ -47,6 +39,12 @@ class ATDEnemy : AActor
 
     UPROPERTY(NotEditable)
     float LerpAlpha = 0;
+
+    USceneComponent GetTargetComponent()
+    {
+        return Mesh;
+    }
+
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -123,7 +121,7 @@ class ATDEnemy : AActor
         float distance = Math::Lerp(0, Length, LerpAlpha);
 
         FTransform tf = Path.GetTransformAtDistanceAlongSpline(distance, ESplineCoordinateSpace::World);
-        tf.Location = FVector(tf.Location.X, tf.Location.Y, tf.Location.Z + CapsuleComponent.CapsuleHalfHeight);
+        tf.Location = FVector(tf.Location.X, tf.Location.Y, tf.Location.Z);
 
         SetActorLocation(tf.Location);
         SetActorRotation(tf.Rotation);
