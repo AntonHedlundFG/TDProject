@@ -5,6 +5,9 @@ class AExplosion : ANiagaraActor
     UPoolableComponent PoolableComponent;
 
     UPROPERTY(EditAnywhere, Category = "Explosion")
+    float Lifetime = 2.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Explosion")
     float Damage = 100.0f;
 
     UPROPERTY(EditAnywhere, Category = "Explosion")
@@ -39,7 +42,7 @@ class AExplosion : ANiagaraActor
         }
         DamageAllInRange();
         
-        System::SetTimer(PoolableComponent, n"ReturnToPool", 2.0f, false);
+        System::SetTimer(PoolableComponent, n"ReturnToPool", Lifetime, false);
 
     }
     
