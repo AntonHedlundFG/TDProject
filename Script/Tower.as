@@ -81,8 +81,9 @@
     bool bProjectileUsesGravity = false;
     const float Gravity = 9810.0f;
 
-    UPROPERTY(VisibleAnywhere, Category = "Tower")
-    UActorObjectPool Pool;
+    // UPROPERTY(VisibleAnywhere, Category = "Tower")
+    // UActorComponentObjectPool Pool;
+    UObjectPoolSubsystem ObjectPoolSubsystem;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -96,18 +97,22 @@
         //Makes sure Mesh visibilities are correct from the start.
         OnRep_IsBuilt();
 
-        Pool = Cast<UActorObjectPool>(NewObject(this, UActorObjectPool::StaticClass()));
-        if(IsValid(Pool))
+        if(ProjectileClass != nullptr)
         {
-            Pool.Initialize(ProjectileClass, 10);
+            ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
 
-            AProjectile Projectile = Cast<AProjectile>(Pool.GetObject());
+            AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass));
             if(IsValid(Projectile))
             {
                 ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
                 bProjectileUsesGravity = Projectile.bIsAffectedByGravity;
-                Pool.ReturnObject(Projectile);
+                ObjectPoolSubsystem.ReturnObject(ProjectileClass, Projectile);
             }
+        }
+        else
+        {
+            Print(f"No projectile class set for tower: {GetName()} -> Destroying actor");
+            DestroyActor();
         }
 
     }
@@ -159,7 +164,7 @@
 
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             
-            AProjectile Projectile = Cast<AProjectile>(Pool.GetObject(FirePoint.GetWorldLocation(), FireRotation));
+            AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot();
 
             AStaticAOEProjectile StaticAOEProjectile = Cast<AStaticAOEProjectile>(Projectile);

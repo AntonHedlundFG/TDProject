@@ -30,7 +30,8 @@ class AProjectile : AActor
     UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     TSubclassOf<AExplosion> ExplosionClass;
 
-    UActorObjectPool ExplosionPool;
+    //UActorComponentObjectPool ExplosionPool;
+    UObjectPoolSubsystem ObjectPoolSubsystem;
 
     const float Gravity = 9810.0f;
     
@@ -38,16 +39,14 @@ class AProjectile : AActor
 
     TArray<AActor> HitActors;
 
+    bool bIsActive = false;
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
         if(ExplosionClass != nullptr)
         {
-            ExplosionPool = Cast<UActorObjectPool>(NewObject(this, UActorObjectPool::StaticClass()));
-            if(IsValid(ExplosionPool))
-            {
-                ExplosionPool.Initialize(ExplosionClass, 1);
-            }
+            ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
         }
     }
 
@@ -57,6 +56,7 @@ class AProjectile : AActor
         DespawnTimer = System::SetTimer(this, n"Despawn", LifeTimeMax, false);
 
         HitActors.Empty();
+        bIsActive = true;
     }
 
     UFUNCTION(BlueprintOverride)
@@ -76,6 +76,8 @@ class AProjectile : AActor
         System::ClearAndInvalidateTimerHandle(DespawnTimer);
         // Move way out of the way as to not trigger trigger overlap events again
         SetActorLocation(FVector(-10000.0f, -10000.0f, -10000.0f));
+        // Set inactive
+        bIsActive = false;
         // Return to pool
         PoolableComponent.ReturnToPool();
     };
@@ -83,17 +85,18 @@ class AProjectile : AActor
     UFUNCTION(BlueprintEvent)
     void DamageTarget(AActor Target) 
     {
-        if(!IsValid(Target))
+        if(!bIsActive || !IsValid(Target))
         {
             return;
         }
 
-        if(IsValid(ExplosionPool))
+        if(IsValid(ObjectPoolSubsystem))
         {
-            AExplosion Explosion = Cast<AExplosion>(ExplosionPool.GetObject(GetActorLocation(), FRotator::ZeroRotator));
+            AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject( ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
             if(IsValid(Explosion))
             {
                 Explosion.Explode();
+                bIsActive = false;
             }
         }
         else

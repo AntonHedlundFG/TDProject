@@ -1,4 +1,4 @@
-class UActorObjectPool : UObject
+class UActorComponentObjectPool : UObject
 {
     UPROPERTY(VisibleAnywhere)
     TSubclassOf<AActor> ObjectClass;
@@ -7,10 +7,22 @@ class UActorObjectPool : UObject
     TArray<AActor> ObjectPool;
 
     UFUNCTION()
-    void Initialize(TSubclassOf<AActor> InObjectClass, int64 Size = 10)
+    void Initialize(TSubclassOf<AActor> InObjectClass, int64 Size = 10, bool bExtendBySize = false)
     {
+        if(InObjectClass == nullptr)
+        {
+            Print("ObjectClass is null, please set ObjectClass before initializing the pool");
+            return;
+        }
         ObjectClass = InObjectClass;
-        for (int32 i = 0; i < Size; i++)
+
+        int64 NewSpawnAmount = Size;
+        if(!bExtendBySize)
+        {
+            NewSpawnAmount -= ObjectPool.Num();
+        }
+
+        for (int32 i = 0; i < NewSpawnAmount; i++)
         {
             SpawnPoolableActor();
         }
@@ -64,12 +76,13 @@ class UActorObjectPool : UObject
     }
 
     UFUNCTION()
-    AActor SpawnPoolableActor(bool bIsActive = false, FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
+    private AActor SpawnPoolableActor(bool bIsActive = false, FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
     {
         AActor Actor = Cast<AActor>(SpawnActor(ObjectClass, Location, Rotation));
         UPoolableComponent PoolableComponent = UPoolableComponent::GetOrCreate(Actor);
         if(IsValid(Actor))
         {
+
             PoolableComponent.Initialize(this);
             if(!bIsActive)
             {            
@@ -86,10 +99,10 @@ class UPoolableComponent : UActorComponent
     AActor ParentActor;
 
     UPROPERTY(VisibleAnywhere)
-    UActorObjectPool Pool;
+    UActorComponentObjectPool Pool;
 
     UFUNCTION()
-    void Initialize(UActorObjectPool InPool)
+    void Initialize(UActorComponentObjectPool InPool)
     {
         Pool = InPool;
         ParentActor = GetOwner();
@@ -106,5 +119,53 @@ class UPoolableComponent : UActorComponent
         {
             ParentActor.DestroyActor();
         }
+    }
+}
+
+class UObjectPoolSubsystem : UGameInstanceSubsystem
+{
+    UPROPERTY(VisibleAnywhere)
+    TMap<TSubclassOf<AActor>, UActorComponentObjectPool> ObjectPools;
+
+    UFUNCTION()
+    void InitializePool(TSubclassOf<AActor> InObjectClass, int64 Size = 10)
+    {
+        UActorComponentObjectPool Pool = GetObjectPool(InObjectClass);
+        Pool.Initialize(InObjectClass, Size, false);
+    }
+
+    UFUNCTION()
+    UActorComponentObjectPool GetObjectPool(TSubclassOf<AActor> ObjectClass)
+    {
+        UActorComponentObjectPool Pool = nullptr;
+        if(ObjectPools.Contains(ObjectClass))
+        {
+            Pool = ObjectPools[ObjectClass];
+        }
+        else
+        {
+            Pool = Cast<UActorComponentObjectPool>(NewObject(this, UActorComponentObjectPool::StaticClass()));
+            Pool.Initialize(ObjectClass);
+            ObjectPools.Add(ObjectClass, Pool);
+        }
+        return Pool;
+    }
+
+    UFUNCTION()
+    AActor GetObject(TSubclassOf<AActor> InObjectClass, FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
+    {
+        UActorComponentObjectPool Pool = GetObjectPool(InObjectClass);
+
+        AActor Object = Pool.GetObject(Location, Rotation);
+
+        return Object;
+    }
+
+
+    UFUNCTION()
+    void ReturnObject(TSubclassOf<AActor> InObjectClass, AActor Object)
+    {
+        UActorComponentObjectPool Pool = GetObjectPool(InObjectClass);
+        Pool.ReturnObject(Object);
     }
 }
