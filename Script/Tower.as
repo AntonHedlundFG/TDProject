@@ -82,7 +82,7 @@
     const float Gravity = 9810.0f;
 
     UPROPERTY(VisibleAnywhere, Category = "Tower")
-    UObjectPool Pool;
+    UActorObjectPool Pool;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -96,7 +96,7 @@
         //Makes sure Mesh visibilities are correct from the start.
         OnRep_IsBuilt();
 
-        Pool = Cast<UObjectPool>(NewObject(this, UObjectPool::StaticClass()));
+        Pool = Cast<UActorObjectPool>(NewObject(this, UActorObjectPool::StaticClass()));
         if(IsValid(Pool))
         {
             Pool.Initialize(ProjectileClass, 10);

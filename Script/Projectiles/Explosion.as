@@ -1,5 +1,8 @@
-class AExplosion : APoolableActor
+class AExplosion : ANiagaraActor
 {
+
+    UPROPERTY(DefaultComponent)
+    UPoolableComponent PoolableComponent;
 
     UPROPERTY(EditAnywhere, Category = "Explosion")
     float Damage = 100.0f;
@@ -8,29 +11,36 @@ class AExplosion : APoolableActor
     float Radius = 500.0f;
 
     UPROPERTY(EditDefaultsOnly, Category = "Explosion")
-    UParticleSystem ExplosionFX;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Explosion")
     USoundBase ExplosionSound;
+
+    UPROPERTY(EditAnywhere, Category = "Debug")
+    bool bDebug = false;
 
     TArray<AActor> DamagedActors;
 
     UFUNCTION()
     void Explode()
     {
-        // Debug for testing
-        System::DrawDebugSphere(GetActorLocation(), Radius, 12, FLinearColor::Red, 1.0f, 2.0f );
-
-        if (IsValid(ExplosionFX))
+        if(bDebug)
         {
-            // Spawn the explosion FX
+            // Debug for testing
+            System::DrawDebugSphere(GetActorLocation(), Radius, 12, FLinearColor::Red, 1.0f, 2.0f );
         }
+
+        // Play Niagara effect
+        if (IsValid(NiagaraComponent))
+        {
+            NiagaraComponent.Activate(true);
+        }
+
         if (IsValid(ExplosionSound))
         {
             // Play the explosion sound
         }
         DamageAllInRange();
-        ReturnToPool(); // Maybe wanna do this after a delay
+        
+        System::SetTimer(PoolableComponent, n"ReturnToPool", 2.0f, false);
+
     }
     
     UFUNCTION()
@@ -48,6 +58,5 @@ class AExplosion : APoolableActor
             }
         }
     }
-
 
 }

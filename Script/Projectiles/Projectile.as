@@ -1,9 +1,12 @@
-class AProjectile : APoolableActor
+class AProjectile : AActor
 {
     default bReplicates = true;
 
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
+
+    UPROPERTY(DefaultComponent)
+    UPoolableComponent PoolableComponent;
 
     UPROPERTY(DefaultComponent, Attach = Root)
     UStaticMeshComponent Mesh;
@@ -27,7 +30,7 @@ class AProjectile : APoolableActor
     UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     TSubclassOf<AExplosion> ExplosionClass;
 
-    UObjectPool ExplosionPool;
+    UActorObjectPool ExplosionPool;
 
     const float Gravity = 9810.0f;
     
@@ -40,7 +43,7 @@ class AProjectile : APoolableActor
     {
         if(ExplosionClass != nullptr)
         {
-            ExplosionPool = Cast<UObjectPool>(NewObject(this, UObjectPool::StaticClass()));
+            ExplosionPool = Cast<UActorObjectPool>(NewObject(this, UActorObjectPool::StaticClass()));
             if(IsValid(ExplosionPool))
             {
                 ExplosionPool.Initialize(ExplosionClass, 1);
@@ -74,7 +77,7 @@ class AProjectile : APoolableActor
         // Move way out of the way as to not trigger trigger overlap events again
         SetActorLocation(FVector(-10000.0f, -10000.0f, -10000.0f));
         // Return to pool
-        ReturnToPool();
+        PoolableComponent.ReturnToPool();
     };
 
     UFUNCTION(BlueprintEvent)

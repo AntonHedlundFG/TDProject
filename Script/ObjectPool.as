@@ -1,13 +1,13 @@
-class UObjectPool : UObject
+class UActorObjectPool : UObject
 {
     UPROPERTY(VisibleAnywhere)
-    TSubclassOf<APoolableActor> ObjectClass;
+    TSubclassOf<AActor> ObjectClass;
 
     UPROPERTY(VisibleAnywhere)
-    TArray<APoolableActor> ObjectPool;
+    TArray<AActor> ObjectPool;
 
     UFUNCTION()
-    void Initialize(TSubclassOf<APoolableActor> InObjectClass, int64 Size = 10)
+    void Initialize(TSubclassOf<AActor> InObjectClass, int64 Size = 10)
     {
         ObjectClass = InObjectClass;
         for (int32 i = 0; i < Size; i++)
@@ -17,9 +17,9 @@ class UObjectPool : UObject
     }
 
     UFUNCTION()
-    APoolableActor GetObject(FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
+    AActor GetObject(FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
     {
-        APoolableActor Object = nullptr;
+        AActor Object = nullptr;
         if(ObjectPool.Num() > 0 && IsValid(ObjectPool[0]))
         {
             Object = ObjectPool[0];
@@ -34,13 +34,13 @@ class UObjectPool : UObject
         }
         
         Object.SetActorTickEnabled(true);
-        
+
         return Object;
     }
 
 
     UFUNCTION()
-    void ReturnObject(APoolableActor Object)
+    void ReturnObject(AActor Object)
     {
         if(IsValid(Object))
         {
@@ -53,7 +53,7 @@ class UObjectPool : UObject
     UFUNCTION()
     void ClearPool()
     {
-        for (APoolableActor Object : ObjectPool)
+        for (AActor Object : ObjectPool)
         {
             if(IsValid(Object))
             {
@@ -64,31 +64,35 @@ class UObjectPool : UObject
     }
 
     UFUNCTION()
-    APoolableActor SpawnPoolableActor(bool bIsActive = false, FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
+    AActor SpawnPoolableActor(bool bIsActive = false, FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator)
     {
-        APoolableActor Object = Cast<APoolableActor>(SpawnActor(ObjectClass, Location, Rotation));
-        if(IsValid(Object))
+        AActor Actor = Cast<AActor>(SpawnActor(ObjectClass, Location, Rotation));
+        UPoolableComponent PoolableComponent = UPoolableComponent::GetOrCreate(Actor);
+        if(IsValid(Actor))
         {
-            Object.Initialize(this);
+            PoolableComponent.Initialize(this);
             if(!bIsActive)
             {            
-                ReturnObject(Object);
+                ReturnObject(Actor);
             }
         }
-        return Object;
+        return Actor;
     }
 
 }
 
-class APoolableActor : AActor
+class UPoolableComponent : UActorComponent 
 {
+    AActor ParentActor;
+
     UPROPERTY(VisibleAnywhere)
-    UObjectPool Pool;
+    UActorObjectPool Pool;
 
     UFUNCTION()
-    void Initialize(UObjectPool InPool)
+    void Initialize(UActorObjectPool InPool)
     {
         Pool = InPool;
+        ParentActor = GetOwner();
     }
 
     UFUNCTION()
@@ -96,11 +100,11 @@ class APoolableActor : AActor
     {
         if(IsValid(Pool))
         {
-            Pool.ReturnObject(this);
+            Pool.ReturnObject(ParentActor);
         }
         else
         {
-            DestroyActor();
+            ParentActor.DestroyActor();
         }
     }
 }
