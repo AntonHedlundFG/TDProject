@@ -84,6 +84,11 @@
     // UPROPERTY(VisibleAnywhere, Category = "Tower")
     // UActorComponentObjectPool Pool;
     UObjectPoolSubsystem ObjectPoolSubsystem;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
+    uint8 OwningPlayerIndex = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
+    UPlayerColorsDataAsset PlayerColors;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -92,6 +97,7 @@
         {
             //Bind InteractableComponent delegate functions.
             InteractableComp.OnPurchasedDelegate.BindUFunction(this, n"Interact");
+            InteractableComp.CanBePurchasedDelegate.BindUFunction(this, n"CanInteract");
         }
 
         //Makes sure Mesh visibilities are correct from the start.
@@ -113,6 +119,14 @@
         {
             Print(f"No projectile class set for tower: {GetName()} -> Destroying actor");
             DestroyActor();
+        }
+
+
+        if (PlayerColors != nullptr)
+        {
+            FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
+            PreviewMesh.SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
+            FinishedMesh.SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
         }
 
     }
@@ -150,6 +164,18 @@
     {
         bIsBuilt = true;
         OnRep_IsBuilt();
+    }
+
+    UFUNCTION()
+    private bool CanInteract(APlayerController User)
+    {
+        ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
+        if (PS != nullptr)
+        {
+            return PS.PlayerIndex == OwningPlayerIndex;
+        }
+
+        return true;
     }
 
     UFUNCTION()

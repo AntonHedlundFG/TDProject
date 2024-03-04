@@ -1,4 +1,5 @@
 delegate void FOnPurchasedDelegate(APlayerController User);
+delegate bool FCanBePurchasedDelegate(APlayerController User);
 
 //For this component, only bind OnPurchasedDelegate. It already binds the OnInteract/CanInteract delegates and checks if the user can afford the purchase.
 //A purchased building is considered "always unaffordable" for CanPurchase() 
@@ -9,6 +10,9 @@ class UPricedInteractableComponent : UInteractableComponent
     //Must be bound!
     UPROPERTY(NotVisible)
     FOnPurchasedDelegate OnPurchasedDelegate;
+
+    UPROPERTY(NotVisible)
+    FCanBePurchasedDelegate CanBePurchasedDelegate;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int Price = 100;
@@ -35,6 +39,9 @@ class UPricedInteractableComponent : UInteractableComponent
     bool CanPurchase(APlayerController User)
     {
         if (bIsPurchased) 
+            return false;
+
+        if (CanBePurchasedDelegate.IsBound() && !CanBePurchasedDelegate.Execute(User))
             return false;
         
         ATDPlayerState State = Cast<ATDPlayerState>(User.PlayerState);
