@@ -29,6 +29,11 @@
     UPROPERTY(EditDefaultsOnly, Category = "Object Registry")
     ERegisteredObjectTypes RegisteredObjectType = ERegisteredObjectTypes::ERO_Player;
 
+    // Player-Specific Mesh Colors
+    UPROPERTY()
+    UPlayerColorsDataAsset PlayerColors;
+    private bool bShouldUpdateMaterialColor = true;
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
@@ -57,6 +62,22 @@
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
+        //Handle setting color on connecting. Waits for the PlayerState to be assigned. Cannot be done in BeginPlay as PlayerState can be null
+        if (bShouldUpdateMaterialColor && PlayerState != nullptr)
+        {
+            if (PlayerColors == nullptr)
+            {
+                bShouldUpdateMaterialColor = false;
+                return;
+            }
+
+            ATDPlayerState PS = Cast<ATDPlayerState>(PlayerState);
+            if (PS != nullptr)
+            {
+                Mesh.SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColors.GetColorOf(PS.PlayerIndex));
+            }
+            bShouldUpdateMaterialColor = false;
+        }
     }
 
     UFUNCTION(BlueprintCallable)
