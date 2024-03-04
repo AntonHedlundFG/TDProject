@@ -9,6 +9,7 @@ void ATDPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ATDPlayerState, Gold);
+	DOREPLIFETIME(ATDPlayerState, PlayerIndex);
 }
 
 void ATDPlayerState::CopyProperties(APlayerState* PlayerState)
@@ -17,6 +18,7 @@ void ATDPlayerState::CopyProperties(APlayerState* PlayerState)
 	{
 		CastState->UniqueOwnerNetID = UniqueOwnerNetID;
 		CastState->Gold = Gold;
+		CastState->PlayerIndex = PlayerIndex;
 	}
 }
 

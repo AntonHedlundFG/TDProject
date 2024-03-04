@@ -10,9 +10,20 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	auto Subsystem = GetGameInstance()->GetSubsystem<UEpicOnlineSubsystem>();
 
+	//Bypass online functionality, usually in PIE mode
 	if (!Subsystem || !Subsystem->IsPlayerLoggedIn())
 	{
 		Super::PostLogin(NewPlayer);
+
+		if (auto* CastState = Cast<ATDPlayerState>(NewPlayer->PlayerState))
+		{
+			if (!NewPlayer->IsLocalPlayerController() && CastState->PlayerIndex <= 0)
+			{
+				CastState->PlayerIndex = NextPlayerIndex;
+				NextPlayerIndex++;
+			}
+		}
+
 		return;
 	}
 
@@ -57,6 +68,12 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	if (auto* CastState = Cast<ATDPlayerState>(NewPlayer->PlayerState))
 	{
 		CastState->UniqueOwnerNetID = UniqueNetIDString;
+
+		if (!NewPlayer->IsLocalPlayerController() && CastState->PlayerIndex <= 0)
+		{
+			CastState->PlayerIndex = NextPlayerIndex;
+			NextPlayerIndex++;
+		}
 	}
 
 }
@@ -83,6 +100,12 @@ void ALobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	if (auto* CastState = Cast<ATDPlayerState>(C->PlayerState))
 	{
 		CastState->UniqueOwnerNetID = UniqueNetIDString;
+
+		if (!C->IsLocalPlayerController() && CastState->PlayerIndex <= 0)
+		{
+			CastState->PlayerIndex = NextPlayerIndex;
+			NextPlayerIndex++;
+		}
 	}
 }
 

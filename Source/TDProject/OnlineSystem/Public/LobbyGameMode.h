@@ -31,4 +31,6 @@ private:
 
 	TArray<ATDPlayerState*> InactiveStates;
 
+	uint8 NextPlayerIndex = 1; // Host is always 0
+
 };

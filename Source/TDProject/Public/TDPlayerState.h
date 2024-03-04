@@ -25,6 +25,9 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	int Gold = 0;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	uint8 PlayerIndex = 0;
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0))
