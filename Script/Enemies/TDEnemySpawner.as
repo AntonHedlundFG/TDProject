@@ -23,15 +23,15 @@ class ATDEnemySpawner : AActor
             GameMode.RegisterSpawner(this);
     }
 
-    void SpawnEnemy(int index)
+    void SpawnEnemy(TSubclassOf<ATDEnemy> enemy)
     {
         if(!System::IsServer()) return;
 
-        if(Enemies[index] == nullptr) return;
+        //if(Enemies[index] == nullptr) return;
          
         FVector pos = GetActorLocation();
         FRotator rot = GetActorRotation();
-        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(Enemies[index], pos, rot));
+        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
 
         SpawnedEnemy.OnUnitSpawn(Path);
 
