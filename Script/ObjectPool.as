@@ -115,7 +115,7 @@ class UPoolableComponent : UActorComponent
         {
             Pool.ReturnObject(ParentActor);
         }
-        else
+        else if (IsValid(ParentActor))
         {
             ParentActor.DestroyActor();
         }
