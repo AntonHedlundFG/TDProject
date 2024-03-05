@@ -90,8 +90,22 @@ class ATDEnemy : AActor
     {
         Path = nullptr;
         IsActive = false;
+        RewardPlayers();
         OnEnemyDeath.Broadcast(this);
         DestroyActor();
+    }
+
+    void RewardPlayers()
+    {
+        if (System::IsServer())
+        {
+            for (int i = 0; i < Gameplay::NumPlayerStates; i++)
+            {
+                ATDPlayerState PS = Cast<ATDPlayerState>(Gameplay::GetPlayerState(i));
+                if (PS == nullptr) continue;
+                PS.Gold += KillBounty;
+            }
+        }
     }
 
     UFUNCTION()
