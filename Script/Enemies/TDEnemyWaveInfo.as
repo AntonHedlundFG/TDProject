@@ -8,8 +8,6 @@ class UTDEnemyWaveInfo : UDataAsset
 struct FWave
 {
     UPROPERTY()
-    FString WaveName = "";
-    UPROPERTY()
     TArray<FWaveSection> WaveSections;
 }
 

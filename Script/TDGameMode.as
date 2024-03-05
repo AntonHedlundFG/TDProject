@@ -1,13 +1,5 @@
 ﻿class ATDGameMode : ALobbyGameMode
 {
-    // Timer handle for the spawn timer
-    FTimerHandle SpawnTimerHandle;
-    float SpawnTimer = 0.0f;
-
-    // The time between each spawn
-    UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    float SpawnInterval = 4.0f;
-
     // The time between waves
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
     float WaveTime = 10.0f;
@@ -15,34 +7,12 @@
     // The time until the next wave
     float TimeUntilNextWave = 10.0f;
 
-    // Holds the info of all the enemy waves
-    UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    UTDEnemyWaveInfo WaveInfo;
-
-    // Current wave enemies and amount, gotten from wave info
-    TArray<TSubclassOf<ATDEnemy>> WaveUnits;
-    TArray<int> WaveAmounts;
-
-    // Enemies of a certain type left to spawn in current wave
-    int NumEnemiesOfType = 0;
-
-    // The number of enemies to spawn per wave
-    UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    int EnemiesPerWave = 10;
-
-    // The number of enemies left to spawn
-    int NumEnemiesToSpawn = 0;
-
-    // Current wave number (will immediately increment to 0)
-    int WaveNumber = -1;
-
-    // Flag whether to run spawn method
-    bool IsSpawning = false;
+    // Current wave number / index
+    int WaveNumber = 0;
 
     // Flag whether to run downtime method
     bool IsDownTime = false;
     
-
     // Array of active spawners
     TArray<ATDEnemySpawner> EnemySpawners;
 
@@ -71,8 +41,8 @@
     {
         if(EnemySpawners.Num() <= 0) return;
 
-        //Spawns enemies, based on wave info, from each spawner at set intervals
-        SpawnEnemies(DeltaSeconds);
+        // Checks if all spawners finished spawning current wave
+        CheckWaveCompleted();
 
         //Ticks when finished spawnig, starts next wave after set time
         DownTimeTimer(DeltaSeconds);
@@ -81,41 +51,6 @@
         UpdateGameState();
     }
 
-    void SpawnEnemies(float DeltaSeconds)
-    {
-        if(!IsSpawning) return;
-
-        // if finished spawning current unit type, remove it and check if there is another type to start spawning
-        if(NumEnemiesOfType <= 0)
-        {
-            WaveAmounts.RemoveAt(0);
-            WaveUnits.RemoveAt(0);
-
-            if(WaveAmounts.Num() > 0 && WaveUnits.Num() > 0)
-            {
-                NumEnemiesOfType = WaveAmounts[0];
-            }
-            else 
-            {
-                // if finished spawning all units in the wave, start the down-time timer
-                IsSpawning = false;
-                IsDownTime = true;
-            }
-        }
-
-        SpawnTimer += DeltaSeconds;
-        if(SpawnTimer >= SpawnInterval)
-        {
-
-            for(int i = 0; i < EnemySpawners.Num(); i++)
-            {
-                EnemySpawners[i].SpawnEnemy(WaveUnits[0]);
-            }
-
-            SpawnTimer = 0;
-            NumEnemiesOfType--;
-        }
-    }
 
     void DownTimeTimer(float DeltaSeconds)
     {
@@ -125,41 +60,36 @@
         if(WaveTime <= 0)
         {
             IsDownTime = false;
+            WaveNumber++;
             StartNextWave();
             WaveTime = TimeUntilNextWave;
         }
     }
 
     void StartNextWave()
-    {
-        // Increment the wave number
-        WaveNumber++;
-
-        // Check if next wave is valid, then set new current wave
-        if(WaveNumber >= WaveInfo.Waves.Num())
+    { 
+        for(int i = 0; i < EnemySpawners.Num(); i++)
         {
-            Print("Empty Wave List");
-             return;
+            EnemySpawners[i].SetCurrentWave(WaveNumber);
         }
-        FWave CurrentWave = WaveInfo.Waves[WaveNumber];
-        Print(CurrentWave.WaveName);
-
-        WaveUnits.Empty();
-        WaveAmounts.Empty();
-        for(auto section : CurrentWave.WaveSections)
-        {
-            WaveUnits.Add(section.unit);
-            WaveAmounts.Add(section.amount);
-        }
-
-        // Set the number of the first enemy type to spawn, start spawning
-        NumEnemiesOfType = WaveAmounts[0];
-        IsSpawning = true;
+        Print(f"Wave: {WaveNumber+1}");
     }
 
-    bool IsWaveCompleted()
+
+    void CheckWaveCompleted()
     {
-        return NumEnemiesToSpawn <= 0 && TimeUntilNextWave <= 0;
+        if(IsDownTime) return;
+
+        for(int i = 0; i < EnemySpawners.Num(); i++)
+        {
+            if(EnemySpawners[i].IsSpawning)
+            {
+                return;
+            }
+        }
+
+        Print("Wave Finished");
+        IsDownTime = true;
     }
 
     void UpdateGameState()
