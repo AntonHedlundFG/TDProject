@@ -2,7 +2,7 @@
 class UTDEnemyWaveInfo : UDataAsset
 {
     UPROPERTY()
-    TArray<FWave> WaveArray;
+    TArray<FWave> Waves;
 }
 
 struct FWave
@@ -10,5 +10,13 @@ struct FWave
     UPROPERTY()
     FString WaveName = "";
     UPROPERTY()
-    TMap<TSubclassOf<ATDEnemy>, int> WaveMap;
+    TArray<FWaveSection> WaveSections;
+}
+
+struct FWaveSection
+{
+    UPROPERTY()
+    TSubclassOf<ATDEnemy> unit;
+    UPROPERTY()
+    int amount;
 }

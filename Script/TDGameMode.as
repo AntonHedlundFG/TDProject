@@ -60,6 +60,7 @@
         UpdateGameState();
         
 
+        TimeUntilNextWave = WaveTime;  
         // Start the first wave
         StartNextWave();
 
@@ -84,6 +85,7 @@
     {
         if(!IsSpawning) return;
 
+        // if finished spawning current unit type, remove it and check if there is another type to start spawning
         if(NumEnemiesOfType <= 0)
         {
             WaveAmounts.RemoveAt(0);
@@ -95,6 +97,7 @@
             }
             else 
             {
+                // if finished spawning all units in the wave, start the down-time timer
                 IsSpawning = false;
                 IsDownTime = true;
             }
@@ -133,20 +136,20 @@
         WaveNumber++;
 
         // Check if next wave is valid, then set new current wave
-        if(WaveNumber >= WaveInfo.WaveArray.Num())
+        if(WaveNumber >= WaveInfo.Waves.Num())
         {
             Print("Empty Wave List");
              return;
         }
-        FWave CurrentWave = WaveInfo.WaveArray[WaveNumber];
+        FWave CurrentWave = WaveInfo.Waves[WaveNumber];
         Print(CurrentWave.WaveName);
 
         WaveUnits.Empty();
         WaveAmounts.Empty();
-        for(auto pair : CurrentWave.WaveMap)
+        for(auto section : CurrentWave.WaveSections)
         {
-            WaveUnits.Add(pair.Key);
-            WaveAmounts.Add(pair.Value);
+            WaveUnits.Add(section.unit);
+            WaveAmounts.Add(section.amount);
         }
 
         // Set the number of the first enemy type to spawn, start spawning
