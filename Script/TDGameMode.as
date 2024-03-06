@@ -101,7 +101,6 @@ class ATDGameMode : ALobbyGameMode
             }
         }
 
-        Print("Wave Finished");
         OnDownTimeStart.Broadcast();
         IsDownTime = true;
     }

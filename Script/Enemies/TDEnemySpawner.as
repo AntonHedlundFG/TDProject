@@ -31,7 +31,8 @@ class ATDEnemySpawner : AActor
 
     // The time between each spawn
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    float SpawnInterval = 4.0f;
+    float DefaultSpawnInterval = 4.0f;
+    float SpawnInterval;
     float SpawnTimer = 0.0f;
 
     UObjectPoolSubsystem PoolSubsystem;
@@ -87,7 +88,6 @@ class ATDEnemySpawner : AActor
                 IsWaveComplete = true;
                 return;
             }
-            
             //spawn unit if valid, "pause" spawning if not
             if(WaveUnits[0] != nullptr)
                 SpawnEnemy(WaveUnits[0]);
@@ -120,7 +120,10 @@ class ATDEnemySpawner : AActor
         }
 
         NumEnemiesOfType = WaveAmounts[0];
+
+        SpawnInterval = CurrentWave.SpawnFrequency <= 0 ? DefaultSpawnInterval : CurrentWave.SpawnFrequency;
         SpawnTimer = SpawnInterval;
+
         IsWaveComplete = false;
         IsWaveEmpty = false;
     }

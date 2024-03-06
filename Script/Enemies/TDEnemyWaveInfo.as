@@ -8,6 +8,8 @@ class UTDEnemyWaveInfo : UDataAsset
 struct FWave
 {
     UPROPERTY()
+    int SpawnFrequency;
+    UPROPERTY()
     TArray<FWaveSection> WaveSections;
 }
 
