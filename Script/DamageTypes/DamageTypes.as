@@ -1,5 +1,7 @@
 event void FOnDamageTypeChange(UTDDamageType DamageType, int NewAmount);
 
+// Add this component to any actor which should be able to receive damage types. It stores damage type stacks, but does not have any built-in functionality.
+// Use UDamageEffectComponents for that functionality.
 class UTDDamageTypeComponent : UActorComponent
 {
     private TMap<UTDDamageType, int> DamageTypeInstances;
@@ -41,6 +43,7 @@ class UTDDamageTypeComponent : UActorComponent
     }
 }
 
+//This is an internal class for UTDDamageTypeComponent, do not use it.
 class UDelayedRemoval : UObject
 {
     UTDDamageTypeComponent TargetStored;
@@ -65,6 +68,7 @@ class UDelayedRemoval : UObject
     }
 }
 
+//Create Data Asset instances of this in the editor for each element.
 class UTDDamageType : UDataAsset
 {
     UPROPERTY()
