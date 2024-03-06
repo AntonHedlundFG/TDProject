@@ -95,7 +95,7 @@ class ATDEnemy : AActor
     UFUNCTION(BlueprintEvent)
     void EnterExitPoolBPEvent(bool bIsEntering)
     {
-        
+        Print("EnterExitPoolBPEvent is not implemented in BP");
     }
 
 
