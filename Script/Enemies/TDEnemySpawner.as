@@ -32,6 +32,8 @@ class ATDEnemySpawner : AActor
     float SpawnInterval = 4.0f;
     float SpawnTimer = 0.0f;
 
+    UObjectPoolSubsystem PoolSubsystem;
+
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -39,6 +41,9 @@ class ATDEnemySpawner : AActor
         GameMode = Cast<ATDGameMode>(Gameplay::GetGameMode());
         if(IsValid(GameMode))
             GameMode.RegisterSpawner(this);
+
+        PoolSubsystem = UObjectPoolSubsystem::Get();
+
     }
 
     UFUNCTION(BlueprintOverride)
@@ -114,7 +119,9 @@ class ATDEnemySpawner : AActor
          
         FVector pos = GetActorLocation();
         FRotator rot = GetActorRotation();
-        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
+        //ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
+        
+        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(PoolSubsystem.GetObject(enemy, pos, rot));
 
         SpawnedEnemy.OnUnitSpawn(Path);
     }

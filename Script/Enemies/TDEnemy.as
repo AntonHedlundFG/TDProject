@@ -48,6 +48,9 @@ class ATDEnemy : AActor
     UPROPERTY(DefaultComponent, Category = "Fire Burn")
     UDamageTypeOverTime BurnedByFire;
 
+    UPROPERTY(DefaultComponent)
+    UPoolableComponent PoolableComponent;
+
     USceneComponent GetTargetComponent()
     {
         return Mesh;
@@ -68,6 +71,7 @@ class ATDEnemy : AActor
         }
 
         HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
+        PoolableComponent.OnPoolEnterExit.AddUFunction(this, n"EnterExitPool");
     }
 
     UFUNCTION(BlueprintOverride)
@@ -78,6 +82,22 @@ class ATDEnemy : AActor
             ObjectRegistry.DeregisterObject(this, RegisteredObjectType); // TODO: Change when we can test with enemies
         }
     }
+
+    UFUNCTION()
+    void EnterExitPool(bool bIsEntering)
+    {
+        HealthSystemComponent.ResetHealth();
+        LerpAlpha = 0;
+
+        EnterExitPoolBPEvent(bIsEntering);
+    }
+
+    UFUNCTION(BlueprintEvent)
+    void EnterExitPoolBPEvent(bool bIsEntering)
+    {
+        
+    }
+
 
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)

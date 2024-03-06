@@ -46,6 +46,7 @@ class UActorComponentObjectPool : UObject
         }
         
         Object.SetActorTickEnabled(true);
+        Cast<UPoolableComponent>(Object.GetComponent(UPoolableComponent::StaticClass())).OnPoolEnterExit.Broadcast(false);
 
         return Object;
     }
@@ -59,6 +60,7 @@ class UActorComponentObjectPool : UObject
             Object.SetActorHiddenInGame(true);
             Object.SetActorTickEnabled(false);
             ObjectPool.Add(Object);
+            Cast<UPoolableComponent>(Object.GetComponent(UPoolableComponent::StaticClass())).OnPoolEnterExit.Broadcast(true);
         }
     }
 
@@ -94,9 +96,12 @@ class UActorComponentObjectPool : UObject
 
 }
 
+event void FOnPoolEnterExit(bool bIsEntering);
+
 class UPoolableComponent : UActorComponent 
 {
     AActor ParentActor;
+    FOnPoolEnterExit OnPoolEnterExit;
 
     UPROPERTY(VisibleAnywhere)
     UActorComponentObjectPool Pool;
@@ -141,12 +146,14 @@ class UObjectPoolSubsystem : UGameInstanceSubsystem
         if(ObjectPools.Contains(ObjectClass))
         {
             Pool = ObjectPools[ObjectClass];
+            Print("Pool already exists");
         }
         else
         {
             Pool = Cast<UActorComponentObjectPool>(NewObject(this, UActorComponentObjectPool::StaticClass()));
             Pool.Initialize(ObjectClass);
             ObjectPools.Add(ObjectClass, Pool);
+            Print("Pool created");
         }
         return Pool;
     }
@@ -160,7 +167,6 @@ class UObjectPoolSubsystem : UGameInstanceSubsystem
 
         return Object;
     }
-
 
     UFUNCTION()
     void ReturnObject(TSubclassOf<AActor> InObjectClass, AActor Object)

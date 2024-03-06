@@ -18,6 +18,12 @@ class UHealthSystemComponent : UActorComponent
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
+        ResetHealth();
+    }
+
+    UFUNCTION()
+    void ResetHealth()
+    {
         SetHealth(MaxHealth);
     }
 
