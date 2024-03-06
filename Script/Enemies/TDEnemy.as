@@ -41,8 +41,12 @@ class ATDEnemy : AActor
     float LerpAlpha = 0;
 
     //Damage Type effects
-    UPROPERTY(DefaultComponent)
+    UPROPERTY(DefaultComponent, Category = "Damage Effects")
     UTDDamageTypeComponent DamageTypeComponent;
+    UPROPERTY(DefaultComponent, Category = "Cold Slow")
+    UDamageTypeMultiplier SlowedByCold;
+    UPROPERTY(DefaultComponent, Category = "Fire Burn")
+    UDamageTypeOverTime BurnedByFire;
 
     USceneComponent GetTargetComponent()
     {
@@ -134,7 +138,7 @@ class ATDEnemy : AActor
             return;
         }
 
-        LerpAlpha += (MoveSpeed / Length) * DeltaSeconds;
+        LerpAlpha += (MoveSpeed * SlowedByCold.GetValue() / Length) * DeltaSeconds;
 
         float distance = Math::Lerp(0, Length, LerpAlpha);
 

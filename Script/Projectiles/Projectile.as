@@ -41,11 +41,11 @@ class AProjectile : AActor
 
     bool bIsActive = false;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     UTDDamageType DamageType;
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     float DamageTypeDuration = 2.0f;
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     int DamageTypeAmount = 1;
 
     UFUNCTION(BlueprintOverride)

@@ -1,8 +1,13 @@
+event void FOnDamageTypeChange(UTDDamageType DamageType, int NewAmount);
+
 class UTDDamageTypeComponent : UActorComponent
 {
     private TMap<UTDDamageType, int> DamageTypeInstances;
 
     TArray<UDelayedRemoval> DelayedRemovals;
+
+    UPROPERTY(NotVisible, BlueprintReadOnly, Category = "Damage Effects")
+    FOnDamageTypeChange OnDamageTypeChange;
 
     int GetEffectsOfType(UTDDamageType DamageType)
     {
@@ -15,6 +20,7 @@ class UTDDamageTypeComponent : UActorComponent
         if (!DamageTypeInstances.Contains(DamageType))
             DamageTypeInstances.Add(DamageType, 0);
         DamageTypeInstances[DamageType] += Amount;
+        OnDamageTypeChange.Broadcast(DamageType, DamageTypeInstances[DamageType]);
 
         if (Duration > 0.0f)
         {
@@ -23,16 +29,13 @@ class UTDDamageTypeComponent : UActorComponent
             DelayedRemovals.Add(Delayed);
         }
 
-        Print(f"{DamageTypeInstances[DamageType] =}");
     }
 
     void RemoveDamageType(UTDDamageType DamageType, int Amount = 1)
     {
         if (!DamageTypeInstances.Contains(DamageType)) return;
         DamageTypeInstances[DamageType] -= Amount;
-
-        Print(f"{DamageTypeInstances[DamageType] =}");
-
+        OnDamageTypeChange.Broadcast(DamageType, DamageTypeInstances[DamageType]);
         if (DamageTypeInstances[DamageType] < 1)
             DamageTypeInstances.Remove(DamageType);
     }
