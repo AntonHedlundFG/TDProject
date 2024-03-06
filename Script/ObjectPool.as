@@ -146,14 +146,12 @@ class UObjectPoolSubsystem : UGameInstanceSubsystem
         if(ObjectPools.Contains(ObjectClass))
         {
             Pool = ObjectPools[ObjectClass];
-            Print("Pool already exists");
         }
         else
         {
             Pool = Cast<UActorComponentObjectPool>(NewObject(this, UActorComponentObjectPool::StaticClass()));
             Pool.Initialize(ObjectClass);
             ObjectPools.Add(ObjectClass, Pool);
-            Print("Pool created");
         }
         return Pool;
     }
