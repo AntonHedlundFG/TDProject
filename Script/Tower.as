@@ -125,8 +125,12 @@
         if (PlayerColors != nullptr)
         {
             FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
-            PreviewMesh.SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
-            FinishedMesh.SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
+            TArray<UActorComponent> OutComponents;
+            GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
+            for (UActorComponent Comp : OutComponents)
+            {
+                Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
+            }
         }
 
     }
