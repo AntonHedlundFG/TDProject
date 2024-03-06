@@ -24,11 +24,6 @@
     UPROPERTY()
     APlayerController PlayerController;
 
-    // Object Registry
-    UObjectRegistry ObjectRegistry;
-    UPROPERTY(EditDefaultsOnly, Category = "Object Registry")
-    ERegisteredObjectTypes RegisteredObjectType = ERegisteredObjectTypes::ERO_Player;
-
     // Player-Specific Mesh Colors
     UPROPERTY()
     UPlayerColorsDataAsset PlayerColors;
@@ -38,25 +33,14 @@
     void BeginPlay()
     {
         PlayerController = Cast<APlayerController>(Controller);
-        ObjectRegistry = UObjectRegistry::Get();
-        if(IsValid(ObjectRegistry)) 
-        {
-            ObjectRegistry.RegisterObject(this, RegisteredObjectType);
-        }
-        else
-        {
-            Print("Object Registry is not valid");
-        }
+        RegisterObject(ERegisteredObjectTypes::ERO_Player);
         
     }
 
     UFUNCTION(BlueprintOverride)
     void EndPlay(EEndPlayReason EndPlayReason)
     {        
-        if(IsValid(ObjectRegistry)) 
-        {
-            ObjectRegistry.DeregisterObject(this, RegisteredObjectType); // TODO: Change when we can test with enemies
-        }
+        DeregisterObject(ERegisteredObjectTypes::ERO_Player);
     }
 
     UFUNCTION(BlueprintOverride)

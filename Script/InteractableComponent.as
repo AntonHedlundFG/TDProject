@@ -37,12 +37,12 @@ class UInteractableComponent : USceneComponent
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        UObjectRegistry::Get().RegisterObject(this, ERegisteredObjectTypes::ERO_InteractableComponent);
+        RegisterObject(ERegisteredObjectTypes::ERO_InteractableComponent);
     }
     UFUNCTION(BlueprintOverride)
     void EndPlay(EEndPlayReason EndPlayReason)
     {
-        UObjectRegistry::Get().DeregisterObject(this, ERegisteredObjectTypes::ERO_InteractableComponent);
+        DeregisterObject(ERegisteredObjectTypes::ERO_InteractableComponent);
     }
 };
 

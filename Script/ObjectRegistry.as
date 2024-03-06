@@ -2,23 +2,6 @@ class UObjectRegistry : UGameInstanceSubsystem
 {
     TMap<ERegisteredObjectTypes, FListWrapper> ObjectLists;
 
-    void RegisterObject(UObject Object, ERegisteredObjectTypes Type)
-    {
-        if (!ObjectLists.Contains(Type))
-        {
-            ObjectLists.Add(Type, FListWrapper());
-        }
-
-        ObjectLists[Type].Objects.Add(Object);
-    }
-
-    void DeregisterObject(UObject Object, ERegisteredObjectTypes Type)
-    {
-        ObjectLists[Type].Objects.RemoveSingleSwap(Object);
-        if (ObjectLists[Type].Objects.IsEmpty())
-            ObjectLists.Remove(Type);
-    }
-
     TArray<UObject> GetAllObjectsOfType(ERegisteredObjectTypes Type)
     {
         if (!ObjectLists.Contains(Type))
@@ -78,4 +61,44 @@ enum ERegisteredObjectTypes
 struct FListWrapper
 {
     TArray<UObject> Objects;
+}
+
+mixin void RegisterObject(UObject Object, ERegisteredObjectTypes Type)
+{
+    UObjectRegistry ObjectRegistry = UObjectRegistry::Get();
+    if(IsValid(ObjectRegistry)) 
+    {
+        if (!ObjectRegistry.ObjectLists.Contains(Type))
+        {
+            ObjectRegistry.ObjectLists.Add(Type, FListWrapper());
+        }
+
+        ObjectRegistry.ObjectLists[Type].Objects.Add(Object);
+    }
+    else
+        Print(f"No Object Registry available");
+}
+
+mixin void DeregisterObject(UObject Object, ERegisteredObjectTypes Type)
+{
+    UObjectRegistry ObjectRegistry = UObjectRegistry::Get();
+    if(IsValid(ObjectRegistry)) 
+    {
+        ObjectRegistry.ObjectLists[Type].Objects.RemoveSingleSwap(Object);
+        if (ObjectRegistry.ObjectLists[Type].Objects.IsEmpty())
+            ObjectRegistry.ObjectLists.Remove(Type);
+    }
+    else
+        Print(f"No Object Registry available");
+}
+
+mixin TArray<AActor> GetAllInRangeActorsOfType(AActor Actor, ERegisteredObjectTypes Type, float MaxDistance = MAX_flt)
+{
+    UObjectRegistry ObjectRegistry = UObjectRegistry::Get();
+    if(IsValid(ObjectRegistry))
+    {
+        return ObjectRegistry.GetAllInRangeActorsOfType(Type, Actor.ActorLocation, MaxDistance);
+    }
+    Print(f"No Object Registry available");
+    return TArray<AActor>();
 }
