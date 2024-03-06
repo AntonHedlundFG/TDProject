@@ -59,7 +59,7 @@ class ATDEnemy : AActor
     void BeginPlay()
     {
         RegisterObject(ERegisteredObjectTypes::ERO_Monster);
-
+        
         Init();
 
         HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
@@ -85,9 +85,6 @@ class ATDEnemy : AActor
         // Set material
         Mesh.SetMaterial(0, EnemyData.Material);
         Mesh.SetVectorParameterValueOnMaterials(FName("Tint"), EnemyData.Color.ToFVector());
-
-        // Reset paath
-        LerpAlpha = 0;
     }
 
     UFUNCTION()
@@ -95,6 +92,10 @@ class ATDEnemy : AActor
     {
         Init();
         EnterExitPoolBPEvent(bIsEntering);
+        if(!bIsEntering)
+        {
+            OnUnitSpawn(Path);
+        }
     }
 
     UFUNCTION(BlueprintEvent)
@@ -114,6 +115,7 @@ class ATDEnemy : AActor
     void OnUnitSpawn(USplineComponent path)
     {
         Path = path;
+        LerpAlpha = 0;
         IsActive = true;
         OnEnemySpawn.Broadcast(this);
     }
@@ -121,11 +123,19 @@ class ATDEnemy : AActor
     UFUNCTION()
     void EnemyDeath()
     {
-        Path = nullptr;
-        IsActive = false;
-        RewardPlayers();
-        OnEnemyDeath.Broadcast(this);
-        DestroyActor();
+        if(EnemyData.NextLevelEnemy != nullptr)
+        {
+            EnemyData = EnemyData.NextLevelEnemy;
+            Init();
+        }
+        else
+        {
+            Path = nullptr;
+            IsActive = false;
+            RewardPlayers();
+            OnEnemyDeath.Broadcast(this);
+            PoolableComponent.ReturnToPool();
+        }
     }
 
     void RewardPlayers()
