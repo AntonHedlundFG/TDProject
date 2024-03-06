@@ -13,7 +13,7 @@ class ATDGameMode : ALobbyGameMode
     float IntermissionTimer = 10.0f;
 
     // Current wave number / index
-    int WaveIndex = 0;
+    int WaveIndex = -1;
 
     // Flag whether to run downtime method
     bool IsDownTime = false;
@@ -41,8 +41,10 @@ class ATDGameMode : ALobbyGameMode
         
 
         IntermissionTimer = WaveDownTime;  
-        // Start the first wave
-        StartNextWave();
+        // Start the count down to the first wave
+        IsDownTime = true;
+        OnDownTimeStart.Broadcast();
+        //StartNextWave();
 
     }
 
@@ -93,7 +95,7 @@ class ATDGameMode : ALobbyGameMode
 
         for(int i = 0; i < EnemySpawners.Num(); i++)
         {
-            if(EnemySpawners[i].IsSpawning)
+            if(!EnemySpawners[i].IsWaveComplete)
             {
                 return;
             }
