@@ -1,14 +1,19 @@
-﻿class ATDGameMode : ALobbyGameMode
+﻿event void FOnWaveStart(int waveIndex);
+event void FOnWaveDownTimeStart();
+
+
+class ATDGameMode : ALobbyGameMode
 {
     // The time between waves
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    float WaveTime = 10.0f;
+    float WaveDownTime = 10.0f;
 
     // The time until the next wave
-    float TimeUntilNextWave = 10.0f;
+    UPROPERTY(BlueprintReadOnly)
+    float IntermissionTimer = 10.0f;
 
     // Current wave number / index
-    int WaveNumber = 0;
+    int WaveIndex = 0;
 
     // Flag whether to run downtime method
     bool IsDownTime = false;
@@ -17,6 +22,11 @@
     TArray<ATDEnemySpawner> EnemySpawners;
 
     ATDGameState GameState;
+
+    UPROPERTY()
+    FOnWaveDownTimeStart OnDownTimeStart;
+    UPROPERTY()
+    FOnWaveStart OnWaveStart;
 
 
     UFUNCTION(BlueprintOverride)
@@ -30,7 +40,7 @@
         UpdateGameState();
         
 
-        TimeUntilNextWave = WaveTime;  
+        IntermissionTimer = WaveDownTime;  
         // Start the first wave
         StartNextWave();
 
@@ -56,13 +66,13 @@
     {
         if(!IsDownTime) return;
 
-        WaveTime -= DeltaSeconds;
-        if(WaveTime <= 0)
+        IntermissionTimer -= DeltaSeconds;
+        if(IntermissionTimer <= 0)
         {
             IsDownTime = false;
-            WaveNumber++;
+            WaveIndex++;
             StartNextWave();
-            WaveTime = TimeUntilNextWave;
+            IntermissionTimer = WaveDownTime;
         }
     }
 
@@ -70,9 +80,10 @@
     { 
         for(int i = 0; i < EnemySpawners.Num(); i++)
         {
-            EnemySpawners[i].SetCurrentWave(WaveNumber);
+            EnemySpawners[i].SetCurrentWave(WaveIndex);
         }
-        Print(f"Wave: {WaveNumber+1}");
+        OnWaveStart.Broadcast(WaveIndex);
+        Print(f"Wave: {WaveIndex+1}");
     }
 
 
@@ -89,6 +100,7 @@
         }
 
         Print("Wave Finished");
+        OnDownTimeStart.Broadcast();
         IsDownTime = true;
     }
 
