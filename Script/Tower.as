@@ -197,12 +197,6 @@
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot();
             Projectile.Damage = Damage;
-            AStaticAOEProjectile StaticAOEProjectile = Cast<AStaticAOEProjectile>(Projectile);
-            if(IsValid(StaticAOEProjectile)) // TODO: Replace with a better solution
-            {
-                StaticAOEProjectile.Range = Range;
-                StaticAOEProjectile.SetActorScale3D(FVector(Range * 0.02f));
-            }
         }
     }
 

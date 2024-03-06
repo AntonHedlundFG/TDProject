@@ -22,8 +22,10 @@ class AExplosion : ANiagaraActor
     TArray<AActor> DamagedActors;
 
     UFUNCTION()
-    void Explode()
+    void Explode(UTDDamageType DamageType = nullptr, float Duration = 0.0f, int Amount = 1, float RadiusIn = 0.0f)
     {
+        if (RadiusIn > 0)
+            Radius = RadiusIn;
         if(bDebug)
         {
             // Debug for testing
@@ -40,14 +42,14 @@ class AExplosion : ANiagaraActor
         {
             // Play the explosion sound
         }
-        DamageAllInRange();
+        DamageAllInRange(DamageType, Duration, Amount);
         
         System::SetTimer(PoolableComponent, n"ReturnToPool", Lifetime, false);
 
     }
     
     UFUNCTION()
-    void DamageAllInRange()
+    void DamageAllInRange(UTDDamageType DamageType, float Duration, int Amount)
     {
         DamagedActors.Empty();
 
@@ -57,6 +59,8 @@ class AExplosion : ANiagaraActor
             if (IsValid(Monster) && !DamagedActors.Contains(Monster))
             {
                 Monster.HealthSystemComponent.TakeDamage(Damage);
+                if (IsValid(DamageType))
+                    Monster.TryApplyDamageType(DamageType, Duration, Amount);
                 DamagedActors.Add(Monster);
             }
         }

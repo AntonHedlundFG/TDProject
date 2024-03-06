@@ -41,6 +41,10 @@ class AProjectile : AActor
 
     bool bIsActive = false;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    bool bShouldExplodeOnDurationEnd = false;
+    bool bExplodeRemaining = false;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     UTDDamageType DamageType;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
@@ -64,6 +68,7 @@ class AProjectile : AActor
 
         HitActors.Empty();
         bIsActive = true;
+        bExplodeRemaining = bShouldExplodeOnDurationEnd;
     }
 
     UFUNCTION(BlueprintOverride)
@@ -79,6 +84,10 @@ class AProjectile : AActor
     UFUNCTION(BlueprintEvent)
     void Despawn() 
     {
+        if (bExplodeRemaining)
+        {
+            Explode();
+        }
         // DonClear despawn timer
         System::ClearAndInvalidateTimerHandle(DespawnTimer);
         // Move way out of the way as to not trigger trigger overlap events again
@@ -88,6 +97,17 @@ class AProjectile : AActor
         // Return to pool
         PoolableComponent.ReturnToPool();
     };
+
+    void Explode()
+    {
+        AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
+        if(IsValid(Explosion))
+        {
+            Explosion.Explode(DamageType, DamageTypeDuration, DamageTypeAmount);
+            bIsActive = false;
+            bExplodeRemaining = false;
+        }
+    }
 
     UFUNCTION(BlueprintEvent)
     void DamageTarget(AActor Target) 
@@ -99,12 +119,7 @@ class AProjectile : AActor
 
         if(IsValid(ObjectPoolSubsystem))
         {
-            AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject( ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
-            if(IsValid(Explosion))
-            {
-                Explosion.Explode();
-                bIsActive = false;
-            }
+            Explode();   
         }
         else
         {        
@@ -221,37 +236,9 @@ class ANonTrackingProjectile : AProjectile
     UFUNCTION()
     void OnBeginOverlap(UPrimitiveComponent OverlappedComponent, AActor OtherActor, UPrimitiveComponent OtherComp, int OtherBodyIndex, bool bFromSweep, const FHitResult&in SweepResult)    
     {
+        if (!bIsActive) return;
         DamageTarget(OtherActor);
         Despawn();
-    }
-
-};
-
-class AStaticAOEProjectile : AProjectile
-{
-
-    UPROPERTY()
-    float Range = 1000.0f;
-
-    void Shoot() override
-    {
-        Super::Shoot();
-        if (System::IsServer())
-        {
-            float BestDist = MAX_flt;
-            for (UObject Obj : UObjectRegistry::Get().GetAllObjectsOfType(ERegisteredObjectTypes::ERO_Monster))
-            {
-                AActor Actor = Cast<AActor>(Obj);
-                if (!IsValid(Actor)) continue;
-
-                const float Distance = Actor.ActorLocation.Distance(ActorLocation);
-                // Deal Damage to all monsters in range
-                if (Distance < Range)
-                {
-                    DamageTarget(Actor);
-                }
-            }
-        }
     }
 
 };

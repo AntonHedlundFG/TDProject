@@ -76,9 +76,9 @@ class UTDDamageType : UDataAsset
 }
 
 //If duration is 0, effect is permanent. Returns true if the target has a valid UTDDamageTypeComponent
-mixin bool TryApplyDamageType(AActor Self, UTDDamageType DamageType, float& Duration = 0.0f, int& Amount = 1)
+mixin bool TryApplyDamageType(AActor Self, UTDDamageType DamageType, float Duration = 0.0f, int Amount = 1)
 {
-    UTDDamageTypeComponent Comp = Cast<UTDDamageTypeComponent>(Self.GetComponent(UTDDamageTypeComponent::StaticClass()));
+    UTDDamageTypeComponent Comp = Cast<UTDDamageTypeComponent>(UTDDamageTypeComponent::Get(Self));
     if (!IsValid(Comp)) return false;
 
     Comp.ApplyDamageType(DamageType, Duration, Amount);
