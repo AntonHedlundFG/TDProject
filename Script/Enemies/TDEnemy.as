@@ -22,6 +22,9 @@ class ATDEnemy : AActor
     USplineComponent Path;
 
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    UTDEnemyData EnemyData;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     int PointValue = 1;
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     int KillBounty = 1;
@@ -57,6 +60,8 @@ class ATDEnemy : AActor
     {
         RegisterObject(ERegisteredObjectTypes::ERO_Monster);
 
+        Init();
+
         HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
         PoolableComponent.OnPoolEnterExit.AddUFunction(this, n"EnterExitPool");
     }
@@ -68,11 +73,27 @@ class ATDEnemy : AActor
     }
 
     UFUNCTION()
+    void Init()
+    {
+        // Set up the enemy with the data from the data asset
+        HealthSystemComponent.MaxHealth = EnemyData.MaxHealth;
+        HealthSystemComponent.ResetHealth();
+        PointValue = EnemyData.PointValue;
+        KillBounty = EnemyData.KillBounty;
+        Damage = EnemyData.Damage;
+        MoveSpeed = EnemyData.MoveSpeed;
+        // Set material
+        Mesh.SetMaterial(0, EnemyData.Material);
+        Mesh.SetVectorParameterValueOnMaterials(FName("Tint"), EnemyData.Color.ToFVector());
+
+        // Reset paath
+        LerpAlpha = 0;
+    }
+
+    UFUNCTION()
     void EnterExitPool(bool bIsEntering)
     {
-        HealthSystemComponent.ResetHealth();
-        LerpAlpha = 0;
-
+        Init();
         EnterExitPoolBPEvent(bIsEntering);
     }
 
