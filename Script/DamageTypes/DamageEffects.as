@@ -23,14 +23,10 @@ class UDamageEffectComponent : UActorComponent
     }
 }
 
-event void FTickDamageDelegate(int Amount);
 class UDamageTypeMultiplier : UDamageEffectComponent
 {
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     float MultiplierPerStack = 0.8f;
-
-    UPROPERTY(NotVisible, BlueprintReadOnly, Category = "Damage Effects")
-    FTickDamageDelegate TickDamageDelegate;
 
     UFUNCTION()
     float GetValue()
