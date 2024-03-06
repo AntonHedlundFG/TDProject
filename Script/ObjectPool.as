@@ -46,7 +46,7 @@ class UActorComponentObjectPool : UObject
         }
         
         Object.SetActorTickEnabled(true);
-        Cast<UPoolableComponent>(Object.GetComponent(UPoolableComponent::StaticClass())).OnPoolEnterExit.Broadcast(false);
+        UPoolableComponent::Get(Object).OnPoolEnterExit.Broadcast(false);
 
         return Object;
     }
@@ -60,7 +60,7 @@ class UActorComponentObjectPool : UObject
             Object.SetActorHiddenInGame(true);
             Object.SetActorTickEnabled(false);
             ObjectPool.Add(Object);
-            Cast<UPoolableComponent>(Object.GetComponent(UPoolableComponent::StaticClass())).OnPoolEnterExit.Broadcast(true);
+            UPoolableComponent::Get(Object).OnPoolEnterExit.Broadcast(true);
         }
     }
 
