@@ -40,6 +40,10 @@ class ATDEnemy : AActor
     UPROPERTY(NotEditable)
     float LerpAlpha = 0;
 
+    //Damage Type effects
+    UPROPERTY(DefaultComponent)
+    UTDDamageTypeComponent DamageTypeComponent;
+
     USceneComponent GetTargetComponent()
     {
         return Mesh;

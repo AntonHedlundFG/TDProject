@@ -41,6 +41,13 @@ class AProjectile : AActor
 
     bool bIsActive = false;
 
+    UPROPERTY()
+    UTDDamageType DamageType;
+    UPROPERTY()
+    float DamageTypeDuration = 2.0f;
+    UPROPERTY()
+    int DamageTypeAmount = 1;
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
@@ -108,6 +115,11 @@ class AProjectile : AActor
             {
                 HitActors.Add(Target);
                 HealthSystem.TakeDamage(Damage);
+                
+                if (IsValid(DamageType))
+                {
+                    Target.TryApplyDamageType(DamageType, DamageTypeDuration, DamageTypeAmount);
+                }
             }
         }
 
