@@ -1,3 +1,4 @@
+//Consider this an abstract class, which should be expanded upon to add functionality. 
 class UDamageEffectComponent : UActorComponent
 {
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
@@ -23,6 +24,7 @@ class UDamageEffectComponent : UActorComponent
     }
 }
 
+// Use this for things like slowing effects, or other multipliers. For each stack (if bAffectedByMultipleStacks), GetValue() returns MultiplierPerStack ^ NumberOfStacks. 
 class UDamageTypeMultiplier : UDamageEffectComponent
 {
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
@@ -40,6 +42,7 @@ class UDamageTypeMultiplier : UDamageEffectComponent
     }
 }
 
+// This automatically deals damage to a Health Component on the same Actor.
 class UDamageTypeOverTime : UDamageEffectComponent
 {
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
