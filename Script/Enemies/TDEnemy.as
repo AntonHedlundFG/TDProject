@@ -21,7 +21,7 @@ class ATDEnemy : AActor
     UPROPERTY()
     USplineComponent Path;
 
-    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    UPROPERTY(BlueprintReadWrite, Replicated, ReplicatedUsing = OnRep_EnemyLevelChange, Category = "Enemy Settings")
     UTDEnemyData EnemyData;
 
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
@@ -49,31 +49,25 @@ class ATDEnemy : AActor
     UPROPERTY(DefaultComponent)
     UPoolableComponent PoolableComponent;
 
-    USceneComponent GetTargetComponent()
-    {
-        return Mesh;
-    }
+    USceneComponent GetTargetComponent() { return Mesh; }
 
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        RegisterObject(ERegisteredObjectTypes::ERO_Monster);
-        
-        Init();
-
-        HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
-        PoolableComponent.OnPoolEnterExit.AddUFunction(this, n"EnterExitPool");
-    }
-
-    UFUNCTION(BlueprintOverride)
-    void EndPlay(EEndPlayReason EndPlayReason)
-    {
-        DeregisterObject(ERegisteredObjectTypes::ERO_Monster);
+        InitialSetup();
     }
 
     UFUNCTION()
-    void Init()
+    void InitialSetup()
+    {
+        OnRep_EnemyLevelChange();
+        HealthSystemComponent.OnHealthChanged.AddUFunction(this, n"OnHealthChanged");
+        PoolableComponent.OnPoolEnterExit.AddUFunction(this, n"OnEnterExitPool");
+    }
+
+    UFUNCTION()
+    void OnRep_EnemyLevelChange()
     {
         // Set up the enemy with the data from the data asset
         HealthSystemComponent.MaxHealth = EnemyData.MaxHealth;
@@ -88,18 +82,18 @@ class ATDEnemy : AActor
     }
 
     UFUNCTION()
-    void EnterExitPool(bool bIsEntering)
+    void OnEnterExitPool(bool bIsEnteringPool)
     {
-        Init();
-        EnterExitPoolBPEvent(bIsEntering);
-        if(!bIsEntering)
+        OnEnterExitPoolBPEvent(bIsEnteringPool);
+        if(!bIsEnteringPool)
         {
             OnUnitSpawn(Path);
+            RegisterObject(ERegisteredObjectTypes::ERO_Monster);
         }
     }
 
     UFUNCTION(BlueprintEvent)
-    void EnterExitPoolBPEvent(bool bIsEntering)
+    void OnEnterExitPoolBPEvent(bool bIsEntering)
     {
         Print("EnterExitPoolBPEvent is not implemented in BP");
     }
@@ -114,41 +108,54 @@ class ATDEnemy : AActor
     UFUNCTION()
     void OnUnitSpawn(USplineComponent path)
     {
+        OnRep_EnemyLevelChange();
         Path = path;
         LerpAlpha = 0;
         IsActive = true;
         OnEnemySpawn.Broadcast(this);
     }
 
-    UFUNCTION()
-    void EnemyDeath()
+    
+    UFUNCTION(BlueprintCallable)
+    void OnHealthChanged(int32 Health, int32 MaxHealth)
     {
-        if(EnemyData.NextLevelEnemy != nullptr)
+        if (Health <= 0)
         {
-            EnemyData = EnemyData.NextLevelEnemy;
-            Init();
-        }
-        else
-        {
-            Path = nullptr;
-            IsActive = false;
-            RewardPlayers();
-            OnEnemyDeath.Broadcast(this);
-            PoolableComponent.ReturnToPool();
+            OnZeroHealth();
         }
     }
 
-    void RewardPlayers()
+    UFUNCTION()
+    void OnZeroHealth()
     {
-        if (System::IsServer())
+        if(!System::IsServer()) return;
+        RewardPlayers();
+        if(EnemyData.NextLevelEnemy != nullptr)
         {
-            for (int i = 0; i < Gameplay::NumPlayerStates; i++)
-            {
-                ATDPlayerState PS = Cast<ATDPlayerState>(Gameplay::GetPlayerState(i));
-                if (PS == nullptr) continue;
-                PS.Gold += KillBounty;
-            }
+            EnemyData = EnemyData.NextLevelEnemy;
+            OnRep_EnemyLevelChange();
         }
+        else
+        {
+            EnemyDeath();
+        }
+    }
+
+    UFUNCTION()
+    void EnemyDeath()
+    {
+        Path = nullptr;
+        IsActive = false;
+        OnEnemyDeath.Broadcast(this);
+        PoolableComponent.ReturnToPool();
+        DeregisterObject(ERegisteredObjectTypes::ERO_Monster);
+    }
+
+    UFUNCTION()
+    void SetEnemyData(UTDEnemyData data)
+    {
+        EnemyData = data;
+        OnRep_EnemyLevelChange();
     }
 
     UFUNCTION()
@@ -184,13 +191,16 @@ class ATDEnemy : AActor
         SetActorRotation(tf.Rotation);
     }
 
-    
-    UFUNCTION(BlueprintCallable)
-    void OnHealthChanged(int32 Health, int32 MaxHealth)
+    void RewardPlayers()
     {
-        if (Health <= 0)
+        if (System::IsServer())
         {
-            EnemyDeath();
+            for (int i = 0; i < Gameplay::NumPlayerStates; i++)
+            {
+                ATDPlayerState PS = Cast<ATDPlayerState>(Gameplay::GetPlayerState(i));
+                if (PS == nullptr) continue;
+                PS.Gold += KillBounty;
+            }
         }
     }
 
