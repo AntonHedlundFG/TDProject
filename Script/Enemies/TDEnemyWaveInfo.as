@@ -16,7 +16,7 @@ struct FWave
 struct FWaveSection
 {
     UPROPERTY()
-    TSubclassOf<ATDEnemy> unit;
+    UTDEnemyData unit;
     UPROPERTY()
     int amount;
 }

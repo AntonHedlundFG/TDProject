@@ -9,6 +9,8 @@ class ATDEnemySpawner : AActor
     URoadMeshComponent RoadMesh;
     UPROPERTY()
     ATDGameMode GameMode;
+    UPROPERTY()
+    TSubclassOf<ATDEnemy> EnemyBase;
 
     // Is currently spawning wave or not
     UPROPERTY()
@@ -16,7 +18,7 @@ class ATDEnemySpawner : AActor
     private bool IsWaveEmpty = false;
 
     // Current wave enemies and amount, gotten from wave info
-    TArray<TSubclassOf<ATDEnemy>> WaveUnits;
+    TArray<UTDEnemyData> WaveUnits;
     TArray<int> WaveAmounts;
 
     // Enemies of a certain type left to spawn in current wave
@@ -46,7 +48,6 @@ class ATDEnemySpawner : AActor
             GameMode.RegisterSpawner(this);
 
         PoolSubsystem = UObjectPoolSubsystem::Get();
-
     }
 
     UFUNCTION(BlueprintOverride)
@@ -59,8 +60,6 @@ class ATDEnemySpawner : AActor
     void SpawnWave(float DeltaSeconds)
     {
         if(IsWaveComplete) return;
-
-        
 
         // if finished spawning current unit type, remove it and check if there is another type to start spawning
         if(NumEnemiesOfType <= 0 && !IsWaveEmpty)
@@ -128,7 +127,7 @@ class ATDEnemySpawner : AActor
         IsWaveEmpty = false;
     }
 
-    void SpawnEnemy(TSubclassOf<ATDEnemy> enemy)
+    void SpawnEnemy(UTDEnemyData EnemyData)
     {
         if(!System::IsServer()) return;
 
@@ -138,7 +137,8 @@ class ATDEnemySpawner : AActor
         FRotator rot = GetActorRotation();
         //ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(SpawnActor(enemy, pos, rot));
         
-        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(PoolSubsystem.GetObject(enemy, pos, rot));
+        ATDEnemy SpawnedEnemy = Cast<ATDEnemy>(PoolSubsystem.GetObject(EnemyBase, pos, rot));
+        SpawnedEnemy.SetEnemyData(EnemyData);
 
         SpawnedEnemy.OnUnitSpawn(Path);
     }
