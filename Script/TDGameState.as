@@ -25,7 +25,17 @@ class ATDGameState : AGameStateBase
     bool bGameHasStarted = false;
 
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
-    bool bRoundIsOngoing = false;    
+    bool bRoundIsOngoing = false;
+
+    UPROPERTY(Replicated)
+    float NextCountdownEndTime = 0.0f;
+
+    UFUNCTION(BlueprintCallable)
+    float GetRemainingCountdownTime()
+    {
+        float CurrentTime = Gameplay::GameState.ServerWorldTimeSeconds;
+        return Math::Max(0.0f, NextCountdownEndTime - CurrentTime);
+    }    
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()

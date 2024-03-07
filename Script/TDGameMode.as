@@ -107,6 +107,7 @@ class ATDGameMode : ALobbyGameMode
 
         OnDownTimeStart.Broadcast();
         IsDownTime = true;
+        GameState.NextCountdownEndTime = GameState.ServerWorldTimeSeconds + WaveDownTime;
         Print("Wave Completed");
         GameState.bRoundIsOngoing = false;
     }
@@ -143,6 +144,7 @@ class ATDGameMode : ALobbyGameMode
             GameState.bGameHasStarted = true;
         }
         IntermissionTimer = 0.0f;
+        GameState.NextCountdownEndTime = 0.0f;
     }
 
 }
