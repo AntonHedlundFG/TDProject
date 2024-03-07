@@ -1,9 +1,9 @@
 # Tower Defense Project, Unreal Engine 5 w/ AngelScript
 This is a small prototype project, intended to be a way for us to learn how to use AngelScript with Unreal Engine 5, using the alternate engine build by [Hazelight](https://angelscript.hazelight.se/).
 The collaborators for this project are:
-- [Anton Hedlund](https://github.com/AntonHedlundFG)
-- [Erik Lund](https://github.com/Ekrick)
-- [Johan Brandt](https://github.com/TriKnot)
+- [Anton Hedlund](www.AntonHedlund.com)
+- [Erik Lund](https://lunderik.wixsite.com/portfolio)
+- [Johan Brandt](https://www.johanbrandt.com/)
 
 
 ## Goals
@@ -14,5 +14,5 @@ The collaborators for this project are:
 
 ## Learnings
 - AngelScript is fast! Going in to this we knew it was, but it surpassed our expectations.
-- Experimental features do not seem to be very well supported. For example, the [RoadMesh](Source/TDProject/Private/RoadMeshComponent.cpp) ProceduralMeshComponent works in C++, but the exact same code did nothing in AngelScript.
+- Experimental features do not seem to be very well supported. For example, the [RoadMesh](Source/TDProject/Private/RoadMeshComponent.cpp) ProceduralMeshComponent works in C++, but the same exact code did nothing in AngelScript.
 - The lack of interfaces in AngelScript can be frustrating, but mixin functions can serve as a more-than-decent alternative. For example, the AActor.TryApplyDamageType mixin function in [DamageTypes.as](Script/DamageTypes/DamageTypes.as)
