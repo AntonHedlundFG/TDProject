@@ -1,4 +1,5 @@
 //Consider this an abstract class, which should be expanded upon to add functionality. 
+UCLASS(Abstract)
 class UDamageEffectComponent : UActorComponent
 {
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")

@@ -17,7 +17,10 @@ class ATDGameMode : ALobbyGameMode
 
     // Flag whether to run downtime method
     bool IsDownTime = false;
-    
+
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "EnemySpawn")
+    bool bHasManuallyStarted = false;
+
     // Array of active spawners
     TArray<ATDEnemySpawner> EnemySpawners;
 
@@ -66,7 +69,7 @@ class ATDGameMode : ALobbyGameMode
 
     void DownTimeTimer(float DeltaSeconds)
     {
-        if(!IsDownTime) return;
+        if(!IsDownTime || !bHasManuallyStarted) return;
 
         IntermissionTimer -= DeltaSeconds;
         if(IntermissionTimer <= 0)
@@ -85,6 +88,7 @@ class ATDGameMode : ALobbyGameMode
             EnemySpawners[i].SetCurrentWave(WaveIndex);
         }
         OnWaveStart.Broadcast(WaveIndex);
+        GameState.bRoundIsOngoing = true;
         Print(f"Wave: {WaveIndex+1}");
     }
 
@@ -103,6 +107,8 @@ class ATDGameMode : ALobbyGameMode
 
         OnDownTimeStart.Broadcast();
         IsDownTime = true;
+        Print("Wave Completed");
+        GameState.bRoundIsOngoing = false;
     }
 
     void UpdateGameState()
@@ -126,6 +132,17 @@ class ATDGameMode : ALobbyGameMode
     {
         // Remove the spawner from the array
         EnemySpawners.RemoveSingle(Spawner);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "EnemySpawn")
+    void ManuallyProgressGame()
+    {
+        if (!bHasManuallyStarted)
+        {
+            bHasManuallyStarted = true;
+            GameState.bGameHasStarted = true;
+        }
+        IntermissionTimer = 0.0f;
     }
 
 }

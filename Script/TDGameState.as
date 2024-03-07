@@ -21,6 +21,12 @@ class ATDGameState : AGameStateBase
     UPROPERTY()
     int DifficultyLevel = 0;
 
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
+    bool bGameHasStarted = false;
+
+    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
+    bool bRoundIsOngoing = false;    
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
