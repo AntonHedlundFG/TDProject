@@ -59,6 +59,7 @@ class UActorComponentObjectPool : UObject
         {
             Object.SetActorHiddenInGame(true);
             Object.SetActorTickEnabled(false);
+            Object.SetActorLocation(FVector(100000.0));
             ObjectPool.Add(Object);
             UPoolableComponent::Get(Object).OnPoolEnterExit.Broadcast(true);
         }

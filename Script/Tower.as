@@ -61,6 +61,7 @@
     USceneComponent Target;
     FVector TargetLocation;
     FVector TargetVelocity;
+    float TargetDistance;
     float TargetTrackedTime;
     float ProjectileSpeedSquared;
     UPROPERTY(Replicated)
@@ -187,13 +188,7 @@
     {
         if (ProjectileClass != nullptr && IsValid(Target) && bIsBuilt)
         {
-            if(bShouldTrackTarget)
-            {
-                TrackTarget();
-            }
-
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
-            
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot();
             Projectile.Damage = Damage;
@@ -225,7 +220,7 @@
             return;
         }
 
-        if(bKeepTarget && IsValid(Target) && (Target.GetWorldLocation() - FirePoint.GetWorldLocation()).Size() < Range)
+        if(bKeepTarget && IsValid(Target) && IsTargetInRange(Target.GetWorldLocation()))
         {
             return;
         }
@@ -235,7 +230,18 @@
         {
             Target = ClosestEnemy.GetTargetComponent();
         }
+        else
+        {
+            Target = nullptr;
+        }
 
+    }
+
+    UFUNCTION()
+    bool IsTargetInRange(FVector InTargetLocation)
+    {
+        TargetDistance = (InTargetLocation - ActorLocation).Size();
+        return TargetDistance <= Range;
     }
 
     UFUNCTION()
@@ -245,8 +251,7 @@
         if(!IsValid(Target)) return;
 
         FVector TargetNewLocation = Target.GetWorldLocation();
-        float DistanceToTarget = (TargetNewLocation - ActorLocation).Size();
-        if(DistanceToTarget > Range)
+        if(!IsTargetInRange(TargetNewLocation))
         {
             return;  
         }
@@ -277,8 +282,8 @@
 
             // Calculate the time to intercept assuming the target continues in a straight line at constant velocity
             float A = ProjectileSpeedSquared - TargetVelocity.SizeSquared();
-            float B = 2 * DistanceToTarget * TargetVelocity.Size() * CosTheta;
-            float C = -DistanceToTarget * DistanceToTarget;
+            float B = 2 * TargetDistance * TargetVelocity.Size() * CosTheta;
+            float C = -TargetDistance * TargetDistance;
 
             // Calculate the time to intercept
             float T1 = (-B + Math::Sqrt(B * B - 4 * A * C)) / (2 * A);
