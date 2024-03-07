@@ -270,7 +270,10 @@ void UEpicOnlineSubsystem::HostSession(const int32& NumberOfPublicConnections, c
 
 void UEpicOnlineSubsystem::DestroySession()
 {
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (!IsValid(this)) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
 	if (!Subsystem) return;
 	IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
 	if (!Session) return;
