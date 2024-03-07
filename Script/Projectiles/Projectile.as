@@ -52,6 +52,7 @@ class AProjectile : AActor
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     int DamageTypeAmount = 1;
 
+
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
@@ -142,6 +143,22 @@ class AProjectile : AActor
     };
 
 
+    UFUNCTION()
+    float GetCalculatedEffectRadius()
+    {
+        float Radius = 0.0f;
+        if(ExplosionClass != nullptr)
+        {
+            AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
+            if(IsValid(Explosion))
+            {
+                Radius += Explosion.Radius;
+            }
+            Explosion.PoolableComponent.ReturnToPool();
+        }
+        Radius += Mesh.BoundsRadius;
+        return Radius;
+    }
 };
 
 class ATrackingProjectile : AProjectile

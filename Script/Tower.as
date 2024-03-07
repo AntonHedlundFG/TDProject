@@ -82,6 +82,9 @@
     float ProjectileSpeedSquared;
     UPROPERTY(NotVisible, Replicated)
     FRotator TargetRotation;
+    // Width of projectile + possible Explosion effect
+    float ProjectileEffectWidth;
+
 
     //--- Projectile properties ---//
     UPROPERTY(NotVisible)
@@ -123,6 +126,8 @@
                         Range = MaxRange;
                     }
                 }
+                // Calculate the width of the projectile effect
+                ProjectileEffectWidth = Projectile.GetCalculatedEffectRadius();
                 ObjectPoolSubsystem.ReturnObject(ProjectileClass, Projectile);
             }
         }
@@ -389,7 +394,14 @@
     {
         if(IsValid(Projectile))
         {
-            return (Projectile.Speed * Projectile.Speed) * Math::Sin(2 * Math::DegreesToRadians(45)) / Gravity;
+            if(bProjectileUsesGravity)
+            {
+                return (Projectile.Speed * Projectile.Speed) * Math::Sin(2 * Math::DegreesToRadians(45)) / Gravity;
+            }
+            else
+            {
+                return Projectile.Speed * Projectile.LifeSpan + ProjectileEffectWidth;
+            } 
         }
         return 0;
     }
