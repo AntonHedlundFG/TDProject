@@ -6,17 +6,13 @@ class ATDGameMode : ALobbyGameMode
 {
     // The time between waves
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    float WaveDownTime = 10.0f;
-
-    // The time until the next wave
-    UPROPERTY(BlueprintReadOnly)
-    float IntermissionTimer = 10.0f;
+    float WaveIntermissionTime = 10.0f;
 
     // Current wave number / index
     int WaveIndex = -1;
 
     // Flag whether to run downtime method
-    bool IsDownTime = false;
+    bool IsDownTime = true;
 
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "EnemySpawn")
     bool bHasManuallyStarted = false;
@@ -41,14 +37,6 @@ class ATDGameMode : ALobbyGameMode
             GameState = Cast<ATDGameState>(GetWorld().GetGameState());
         }
         UpdateGameState();
-        
-
-        IntermissionTimer = WaveDownTime;  
-        // Start the count down to the first wave
-        IsDownTime = true;
-        OnDownTimeStart.Broadcast();
-        //StartNextWave();
-
     }
 
     UFUNCTION(BlueprintOverride)
@@ -59,25 +47,23 @@ class ATDGameMode : ALobbyGameMode
         // Checks if all spawners finished spawning current wave
         CheckWaveCompleted();
 
-        //Ticks when finished spawnig, starts next wave after set time
-        DownTimeTimer(DeltaSeconds);
+        // Checks when intermission time is over, then starts next wave after
+        CheckIntermission();
 
         // Update the game state
         UpdateGameState();
     }
 
 
-    void DownTimeTimer(float DeltaSeconds)
+    void CheckIntermission()
     {
         if(!IsDownTime || !bHasManuallyStarted) return;
 
-        IntermissionTimer -= DeltaSeconds;
-        if(IntermissionTimer <= 0)
+        if(GameState.GetRemainingCountdownTime() <= 0)
         {
             IsDownTime = false;
             WaveIndex++;
             StartNextWave();
-            IntermissionTimer = WaveDownTime;
         }
     }
 
@@ -107,8 +93,7 @@ class ATDGameMode : ALobbyGameMode
 
         OnDownTimeStart.Broadcast();
         IsDownTime = true;
-        GameState.NextCountdownEndTime = GameState.ServerWorldTimeSeconds + WaveDownTime;
-        Print("Wave Completed");
+        GameState.NextCountdownEndTime = GameState.ServerWorldTimeSeconds + WaveIntermissionTime;
         GameState.bRoundIsOngoing = false;
     }
 
@@ -143,7 +128,6 @@ class ATDGameMode : ALobbyGameMode
             bHasManuallyStarted = true;
             GameState.bGameHasStarted = true;
         }
-        IntermissionTimer = 0.0f;
         GameState.NextCountdownEndTime = 0.0f;
     }
 
