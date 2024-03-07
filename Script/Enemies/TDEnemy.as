@@ -1,6 +1,5 @@
 event void FOnEnemySpawnEvent(ATDEnemy Enemy);
 event void FOnEnemyDeathEvent(ATDEnemy Enemy);
-event void FOnEnemyGoalReachedEvent(ATDEnemy Enemy);
 
 
 class ATDEnemy : AActor
@@ -20,6 +19,7 @@ class ATDEnemy : AActor
     UHealthSystemComponent HealthSystemComponent;
     UPROPERTY()
     USplineComponent Path;
+
 
     UPROPERTY(BlueprintReadWrite, Replicated, ReplicatedUsing = OnRep_EnemyLevelChange, Category = "Enemy Settings")
     UTDEnemyData EnemyData;
@@ -166,17 +166,7 @@ class ATDEnemy : AActor
         float Length = Path.GetSplineLength();
         if(LerpAlpha >= 1.f)
         {
-            Print("Goal Reached");
-            ATDGameMode gameMode = Cast<ATDGameMode>(Gameplay::GetGameMode());
-            if(gameMode != nullptr)
-            {
-                gameMode.OnEnemyReachedGoal(this);
-            }
-            IsActive = false;
-            LerpAlpha = 0;
-            /////
-            DestroyActor();
-            /////
+            OnEnemyGoalReached();
             return;
         }
 
@@ -189,6 +179,18 @@ class ATDEnemy : AActor
 
         SetActorLocation(tf.Location);
         SetActorRotation(tf.Rotation);
+    }
+
+    void OnEnemyGoalReached()
+    {
+            ATDGameMode gameMode = Cast<ATDGameMode>(Gameplay::GetGameMode());
+            if(gameMode != nullptr)
+            {
+                gameMode.OnEnemyReachedGoal(this);
+            }
+            IsActive = false;
+            LerpAlpha = 0;
+            PoolableComponent.ReturnToPool();
     }
 
     void RewardPlayers()
