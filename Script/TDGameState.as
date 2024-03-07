@@ -47,6 +47,10 @@ class ATDGameState : AGameStateBase
     void OnRep_CurrentHealth()
     {
         OnHealthChangedEvent.Broadcast();
+        if(CurrentHealth <= 0)
+        {
+            HandleGameLost();
+        }
     }
 
     void Initialize()
@@ -71,11 +75,7 @@ class ATDGameState : AGameStateBase
         CurrentHealth = Math::Clamp(NewHealth, 0, MaxHealth);
 
         OnRep_CurrentHealth();
-        
-        if(CurrentHealth <= 0)
-        {
-            OnGameLostEvent.Broadcast();
-        }
+    
         
     }
 
