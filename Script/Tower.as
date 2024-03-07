@@ -2,94 +2,94 @@
 {
     default bReplicates = true;
 
+    // Components
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
-
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent FinishedMeshRoot;
     default FinishedMeshRoot.bVisible = false;
     UPROPERTY(DefaultComponent, Attach = FinishedMeshRoot)
     UStaticMeshComponent FinishedMesh;
     default FinishedMesh.bVisible = false;
-
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent PreviewMeshRoot;
     default PreviewMeshRoot.bVisible = true;
     UPROPERTY(DefaultComponent, Attach = PreviewMeshRoot)
     UStaticMeshComponent PreviewMesh;
     default PreviewMesh.bVisible = true;
-
     UPROPERTY(DefaultComponent)
     UPricedInteractableComponent InteractableComp;
-
+    UPROPERTY(DefaultComponent, Attach = FinishedMesh)
+    USceneComponent FirePoint;
+    
+    // Damage per shot
     UPROPERTY(Category = "Tower")
-    int32 Cost = 100;
-
-    UPROPERTY(Category = "Tower")
-    int32 Damage = 1;
-
+    int32 Damage = 100;
+    // Range of the tower in cm
     UPROPERTY(Category = "Tower")
     float Range = 1000.0f;
-
+    // Fire rate in seconds
     UPROPERTY(Category = "Tower")
     float FireRate = 1.0f;
-
+    // How often the tower should update its target
+    UPROPERTY(Category = "Tower")
+    float TargetUpdateRate = 0.5f;
+    // Should the tower track a target
+    UPROPERTY(Category = "Tower|Tracking")
+    bool bShouldTrackTarget = false;
+    // Keep target until it's out of range
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking") 
+    bool bKeepTarget = false; 
+    // Percentage of the target's velocity to lead (1 = 100% of the target's velocity, 0 = no lead, -1 = 100% of the target's velocity in the opposite direction)
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
+    float TrackingLeadPercentage = 0.0f;
+    // How often the tower should update its target's position
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
+    float TrackingUpdateRate = 0.1f;
+    // Degrees per second
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
+    float RotationSpeedXAxis = 0.0f;    
+    // Degrees per second
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
+    float RotationSpeedYAxis = 0.0f;
+    // Lock fire direction to firepoint forward vector
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
+    bool bLockFireDirection = false;
+    // Owning player index
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
+    uint8 OwningPlayerIndex = 0;
+    // Player colors data asset
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
+    UPlayerColorsDataAsset PlayerColors;
+    // Projectile class
     UPROPERTY(Category = "Tower")
     TSubclassOf<AProjectile> ProjectileClass;
 
+    // Debug
     UPROPERTY(Category = "Debug")
     bool bDebugTracking = false;
 
-    UPROPERTY(DefaultComponent, Attach = FinishedMesh)
-    USceneComponent FirePoint;
-
-    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated, ReplicatedUsing = OnRep_IsBuilt, Transient, Category = "Tower")
+    // Tower state
+    UPROPERTY(NotVisible, Replicated, ReplicatedUsing = OnRep_IsBuilt, Category = "Tower")
     bool bIsBuilt = false;
-
-    // Target tracking variables
-    UPROPERTY(Category = "Tower")
-    bool bShouldTrackTarget = false;
-    // Percentage of the target's velocity to lead (1 = 100% of the target's velocity, 0 = no lead, -1 = 100% of the target's velocity in the opposite direction)
-    UPROPERTY(EditAnywhere, Category = "Tower")
-    float TrackingLeadPercentage = 0.0f;
-    UPROPERTY(EditAnywhere, Category = "Tower")
-    float TrackingUpdateRate = 0.1f;
-    // Keep target until it's out of range
-    UPROPERTY(EditAnywhere, Category = "Tower") 
-    bool bKeepTarget = false; 
-    UPROPERTY(Replicated)
+    //--- Tracking ---//
+    UPROPERTY(NotVisible, Replicated)
     USceneComponent Target;
     FVector TargetLocation;
     FVector TargetVelocity;
     float TargetDistance;
     float TargetTrackedTime;
     float ProjectileSpeedSquared;
-    UPROPERTY(Replicated)
+    UPROPERTY(NotVisible, Replicated)
     FRotator TargetRotation;
 
-
-    // Degrees per second
-    UPROPERTY(EditAnywhere, Category = "Tower")
-    float RotationSpeedXAxis = 0.0f;    
-    // Degrees per second
-    UPROPERTY(EditAnywhere, Category = "Tower")
-    float RotationSpeedYAxis = 0.0f;
-    // Lock fire direction to firepoint forward vector
-    UPROPERTY(EditAnywhere, Category = "Tower")
-    bool bLockFireDirection = false;
-
+    //--- Projectile properties ---//
     UPROPERTY(NotVisible)
     bool bProjectileUsesGravity = false;
     const float Gravity = 9810.0f;
 
-    // UPROPERTY(VisibleAnywhere, Category = "Tower")
-    // UActorComponentObjectPool Pool;
+    //--- Object Pooling ---//
     UObjectPoolSubsystem ObjectPoolSubsystem;
-    
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
-    uint8 OwningPlayerIndex = 0;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
-    UPlayerColorsDataAsset PlayerColors;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -113,6 +113,16 @@
             {
                 ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
                 bProjectileUsesGravity = Projectile.bIsAffectedByGravity;
+                // Calculate the max range for the projectile if it is affected by gravity
+                if(bProjectileUsesGravity)
+                {
+                    // Lower it if it is less than the editor set value
+                    float MaxRange = CalculateMaxDistanceForProjectile(Projectile);
+                    if(MaxRange < Range)
+                    {
+                        Range = MaxRange;
+                    }
+                }
                 ObjectPoolSubsystem.ReturnObject(ProjectileClass, Projectile);
             }
         }
@@ -202,9 +212,9 @@
         if (System::IsServer() && bIsBuilt)
         {
             System::SetTimer(this, n"Fire", FireRate, true);
+            System::SetTimer(this, n"UpdateTarget", TargetUpdateRate, true);
             if(bShouldTrackTarget)
             {
-                System::SetTimer(this, n"UpdateTarget", TrackingUpdateRate, true);
                 System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
             }
         }          
@@ -373,6 +383,15 @@
             FinishedMesh.SetRelativeRotation(RollRotation);
 
         }
+    }
+
+    float CalculateMaxDistanceForProjectile(AProjectile Projectile)
+    {
+        if(IsValid(Projectile))
+        {
+            return (Projectile.Speed * Projectile.Speed) * Math::Sin(2 * Math::DegreesToRadians(45)) / Gravity;
+        }
+        return 0;
     }
 
 };

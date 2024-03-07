@@ -14,10 +14,10 @@ class UPricedInteractableComponent : UInteractableComponent
     UPROPERTY(NotVisible)
     FCanBePurchasedDelegate CanBePurchasedDelegate;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Priced Interactable")
     int Price = 100;
 
-    UPROPERTY(Transient, Replicated, BlueprintReadOnly, VisibleAnywhere)
+    UPROPERTY(Transient, Replicated, BlueprintReadOnly, VisibleAnywhere, Category = "Priced Interactable")
     bool bIsPurchased = false;
 
     UFUNCTION(BlueprintOverride)
