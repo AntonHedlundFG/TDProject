@@ -82,8 +82,6 @@
     float ProjectileSpeedSquared;
     UPROPERTY(NotVisible, Replicated)
     FRotator TargetRotation;
-    // Width of projectile + possible Explosion effect
-    float ProjectileEffectWidth;
 
 
     //--- Projectile properties ---//
@@ -93,6 +91,11 @@
 
     //--- Object Pooling ---//
     UObjectPoolSubsystem ObjectPoolSubsystem;
+
+    //--- TimerHandles ---//
+    FTimerHandle FireTimerHandle;
+    FTimerHandle TargetUpdateTimerHandle;
+    FTimerHandle TargetTrackingTimerHandle;
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -126,8 +129,6 @@
                         Range = MaxRange;
                     }
                 }
-                // Calculate the width of the projectile effect
-                ProjectileEffectWidth = Projectile.GetCalculatedEffectRadius();
                 ObjectPoolSubsystem.ReturnObject(ProjectileClass, Projectile);
             }
         }
@@ -216,11 +217,17 @@
         // On server : Start firing and tracking timers if the tower is built
         if (System::IsServer() && bIsBuilt)
         {
-            System::SetTimer(this, n"Fire", FireRate, true);
-            System::SetTimer(this, n"UpdateTarget", TargetUpdateRate, true);
+            FireTimerHandle = System::SetTimer(this, n"Fire", FireRate, true);
+            TargetUpdateTimerHandle = System::SetTimer(this, n"UpdateTarget", TargetUpdateRate, true);
             if(bShouldTrackTarget)
             {
-                System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
+                TargetTrackingTimerHandle = System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
+            }
+            // Get GameState and bind to GameEnded delegate
+            ATDGameState GameState = Cast<ATDGameState>(GetWorld().GetGameState());
+            if(IsValid(GameState))
+            {
+                GameState.OnGameLostEvent.AddUFunction(this, n"OnGameEnded");
             }
         }          
         // On every client : Toggle the visibility of the meshes
@@ -396,14 +403,28 @@
         {
             if(bProjectileUsesGravity)
             {
+                // Max distance for a projectile affected by gravity until it hits the ground at the same height as the fire point
                 return (Projectile.Speed * Projectile.Speed) * Math::Sin(2 * Math::DegreesToRadians(45)) / Gravity;
             }
             else
             {
-                return Projectile.Speed * Projectile.LifeSpan + ProjectileEffectWidth;
+                // Max distance for a projectile not affected by gravity
+                return Projectile.Speed * Projectile.LifeSpan;
             } 
         }
         return 0;
+    }
+
+    UFUNCTION()
+    void OnGameEnded()
+    {
+        if(System::IsServer())
+        {
+            System::ClearAndInvalidateTimerHandle(FireTimerHandle);
+            System::ClearAndInvalidateTimerHandle(TargetUpdateTimerHandle);
+            System::ClearAndInvalidateTimerHandle(TargetTrackingTimerHandle);
+            SetActorTickEnabled(false);
+        }
     }
 
 };
