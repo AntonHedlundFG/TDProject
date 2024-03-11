@@ -9,6 +9,9 @@ class ATDGameState : AGameStateBase
     UPROPERTY()
     FOnGameLostEvent OnGameLostEvent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+    bool bGameIsLost = false;
+
     UPROPERTY()
     FOnHealthChangedEvent OnHealthChangedEvent;
 
@@ -83,6 +86,7 @@ class ATDGameState : AGameStateBase
     void HandleGameLost()
     {
         OnGameLostEvent.Broadcast();
+        bGameIsLost = true;
     }
 
 }
