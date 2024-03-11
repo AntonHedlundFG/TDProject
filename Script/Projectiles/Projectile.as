@@ -12,28 +12,12 @@ class AProjectile : AActor
     UStaticMeshComponent Mesh;
     default Mesh.SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-    float Speed = 1000.0f;
+    UPROPERTY(NotVisible)
+    FProjectileData ProjectileData;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-    float LifeTimeMax = 5.0f;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-    int32 Damage = 1.0f;
-
-    UPROPERTY(VisibleAnywhere, Category = "Projectile")
     bool bIsHoming = false;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-    bool bIsAffectedByGravity = false;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-    TSubclassOf<AExplosion> ExplosionClass;
-
-    //UActorComponentObjectPool ExplosionPool;
     UObjectPoolSubsystem ObjectPoolSubsystem;
-
-    const float Gravity = 9810.0f;
     
     FTimerHandle DespawnTimer;
 
@@ -41,8 +25,6 @@ class AProjectile : AActor
 
     bool bIsActive = false;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-    bool bShouldExplodeOnDurationEnd = false;
     bool bExplodeRemaining = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
@@ -56,20 +38,22 @@ class AProjectile : AActor
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
-        if(ExplosionClass != nullptr)
-        {
-            ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
-        }
+        ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
     }
 
-    UFUNCTION()
     void Shoot()
     {
-        DespawnTimer = System::SetTimer(this, n"Despawn", LifeTimeMax, false);
+        DespawnTimer = System::SetTimer(this, n"Despawn", ProjectileData.LifeTimeMax, false);
 
         HitActors.Empty();
         bIsActive = true;
-        bExplodeRemaining = bShouldExplodeOnDurationEnd;
+        bExplodeRemaining = ProjectileData.bShouldExplodeOnDurationEnd;
+    }
+
+    void Shoot(FProjectileData Data)
+    {
+        ProjectileData = Data;
+        Shoot();
     }
 
     UFUNCTION(BlueprintOverride)
@@ -101,7 +85,7 @@ class AProjectile : AActor
 
     void Explode()
     {
-        AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
+        AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ProjectileData.ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
         if(IsValid(Explosion))
         {
             Explosion.Explode(DamageType, DamageTypeDuration, DamageTypeAmount);
@@ -118,7 +102,7 @@ class AProjectile : AActor
             return;
         }
 
-        if(IsValid(ObjectPoolSubsystem))
+        if(ProjectileData.ExplosionClass != nullptr && IsValid(ObjectPoolSubsystem))
         {
             Explode();   
         }
@@ -129,8 +113,9 @@ class AProjectile : AActor
             
             if(IsValid(HealthSystem) && HealthSystem.IsAlive() && !HitActors.Contains(Target))
             {
+                Print("Hit: " + Target.GetName() + " for " + ProjectileData.Damage + " damage");
                 HitActors.Add(Target);
-                HealthSystem.TakeDamage(Damage);
+                HealthSystem.TakeDamage(ProjectileData.Damage);
                 
                 if (IsValid(DamageType))
                 {
@@ -142,23 +127,6 @@ class AProjectile : AActor
         
     };
 
-
-    UFUNCTION()
-    float GetCalculatedEffectRadius()
-    {
-        float Radius = 0.0f;
-        if(ExplosionClass != nullptr)
-        {
-            AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
-            if(IsValid(Explosion))
-            {
-                Radius += Explosion.Radius;
-            }
-            Explosion.PoolableComponent.ReturnToPool();
-        }
-        Radius += Mesh.BoundsRadius;
-        return Radius;
-    }
 };
 
 class ATrackingProjectile : AProjectile
@@ -206,7 +174,7 @@ class ATrackingProjectile : AProjectile
         // No movement for tracking projectiles
         const float RemainingDistance = Target.ActorLocation.Distance(ActorLocation);
         const FVector Direction = (Target.ActorLocation - ActorLocation).GetSafeNormal();
-        const FVector Movement = Direction * Math::Min(RemainingDistance, DeltaSeconds * Speed);
+        const FVector Movement = Direction * Math::Min(RemainingDistance, DeltaSeconds * ProjectileData.Speed);
         ActorLocation += Movement;
     }
 };
@@ -235,16 +203,16 @@ class ANonTrackingProjectile : AProjectile
     {
         Super::Shoot();
 
-        ProjectileVelocity = ActorForwardVector * Speed;
+        ProjectileVelocity = ActorForwardVector * ProjectileData.Speed;
     }
 
     UFUNCTION(BlueprintOverride)
     void Move(float DeltaSeconds) override
     {
         // Apply gravity if this projectile is affected by it
-        if (bIsAffectedByGravity)
+        if (ProjectileData.BIsAffectedByGravity())
         {
-            ProjectileVelocity.Z -= Gravity * DeltaSeconds;
+            ProjectileVelocity.Z -= ProjectileData.Gravity * DeltaSeconds;
         }
         // Basic movement for non-tracking projectiles
         ActorLocation += ProjectileVelocity * DeltaSeconds;
@@ -259,3 +227,43 @@ class ANonTrackingProjectile : AProjectile
     }
 
 };
+
+class AHitScanProjectile : AProjectile
+{
+    UPROPERTY(EditAnywhere, Category = "Projectile")
+    float Duration = 0.1f;
+
+    UFUNCTION(BlueprintOverride)
+    void ConstructionScript()
+    {
+        ProjectileData.Speed = MAX_flt;    
+    }
+
+    void Shoot() override
+    {
+        Super::Shoot();
+        TArray<FHitResult> HitResults;
+        System::LineTraceMulti(
+            ActorLocation, 
+            ActorLocation + ActorForwardVector * 10000.0f,
+             ETraceTypeQuery::TraceTypeQuery1, 
+             false, 
+             TArray<AActor>(), 
+             EDrawDebugTrace::ForDuration, 
+             HitResults, 
+             true,
+                FLinearColor::Red,
+                FLinearColor::Green,
+                Duration
+        );
+        Print("HitResults: " + HitResults.Num());
+        for (FHitResult HitResult : HitResults)
+        {
+            if (IsValid(HitResult.Actor))
+            {
+                DamageTarget(HitResult.Actor);
+            }
+        }
+    }
+
+}

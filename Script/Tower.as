@@ -22,9 +22,8 @@
     UPROPERTY(DefaultComponent, Attach = FinishedMesh)
     USceneComponent FirePoint;
     
-    // Damage per shot
     UPROPERTY(Category = "Tower")
-    int32 Damage = 100;
+    FName TowerName = FName("Tower");
     // Range of the tower in cm
     UPROPERTY(Category = "Tower")
     float Range = 1000.0f;
@@ -62,8 +61,11 @@
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
     UPlayerColorsDataAsset PlayerColors;
     // Projectile class
-    UPROPERTY(Category = "Tower")
+    UPROPERTY(Category = "Tower|Projectile")
     TSubclassOf<AProjectile> ProjectileClass;
+    //--- Projectile properties ---//
+    UPROPERTY(Category = "Tower|Projectile")
+    FProjectileData ProjectileData;
 
     // Debug
     UPROPERTY(Category = "Debug")
@@ -79,15 +81,9 @@
     FVector TargetVelocity;
     float TargetDistance;
     float TargetTrackedTime;
-    float ProjectileSpeedSquared;
     UPROPERTY(NotVisible, Replicated)
     FRotator TargetRotation;
 
-
-    //--- Projectile properties ---//
-    UPROPERTY(NotVisible)
-    bool bProjectileUsesGravity = false;
-    const float Gravity = 9810.0f;
 
     //--- Object Pooling ---//
     UObjectPoolSubsystem ObjectPoolSubsystem;
@@ -114,22 +110,15 @@
         {
             ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
 
-            AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass));
-            if(IsValid(Projectile))
+            // Calculate the max range for the projectile if it is affected by gravity
+            if(ProjectileData.BIsAffectedByGravity())
             {
-                ProjectileSpeedSquared = Projectile.Speed * Projectile.Speed;
-                bProjectileUsesGravity = Projectile.bIsAffectedByGravity;
-                // Calculate the max range for the projectile if it is affected by gravity
-                if(bProjectileUsesGravity)
+                // Lower it if it is less than the editor set value
+                float MaxRange = CalculateMaxDistanceForProjectile();
+                if(MaxRange < Range)
                 {
-                    // Lower it if it is less than the editor set value
-                    float MaxRange = CalculateMaxDistanceForProjectile(Projectile);
-                    if(MaxRange < Range)
-                    {
-                        Range = MaxRange;
-                    }
+                    Range = MaxRange;
                 }
-                ObjectPoolSubsystem.ReturnObject(ProjectileClass, Projectile);
             }
         }
         else
@@ -206,8 +195,7 @@
         {
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
-            Projectile.Shoot();
-            Projectile.Damage = Damage;
+            Projectile.Shoot(ProjectileData);
         }
     }
 
@@ -303,7 +291,7 @@
             float CosTheta = Direction.DotProduct((GetActorLocation() - TargetNewLocation).GetSafeNormal());
 
             // Calculate the time to intercept assuming the target continues in a straight line at constant velocity
-            float A = ProjectileSpeedSquared - TargetVelocity.SizeSquared();
+            float A = ProjectileData.GetSquaredProjectileSpeed() - TargetVelocity.SizeSquared();
             float B = 2 * TargetDistance * TargetVelocity.Size() * CosTheta;
             float C = -TargetDistance * TargetDistance;
 
@@ -324,10 +312,10 @@
                 FVector Dir;
                 FVector LeadVelocity = TargetVelocity * (1 + TrackingLeadPercentage);
 
-                if(bProjectileUsesGravity)
+                if(ProjectileData.BIsAffectedByGravity())
                 {                    
                     // Vb = Vt - 0.5*Ab*t + [(Pti - Pbi) / t]     
-                    FVector GravityVector = FVector(0.0f, 0.0f, -Gravity);
+                    FVector GravityVector = FVector(0.0f, 0.0f, -ProjectileData.Gravity);
                     Dir = (TargetVelocity + LeadVelocity - GravityVector * T * 0.5f + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
                     
                 }   
@@ -397,22 +385,18 @@
         }
     }
 
-    float CalculateMaxDistanceForProjectile(AProjectile Projectile)
+    float CalculateMaxDistanceForProjectile()
     {
-        if(IsValid(Projectile))
+        if(ProjectileData.BIsAffectedByGravity())
         {
-            if(bProjectileUsesGravity)
-            {
-                // Max distance for a projectile affected by gravity until it hits the ground at the same height as the fire point
-                return (Projectile.Speed * Projectile.Speed) * Math::Sin(2 * Math::DegreesToRadians(45)) / Gravity;
-            }
-            else
-            {
-                // Max distance for a projectile not affected by gravity
-                return Projectile.Speed * Projectile.LifeSpan;
-            } 
+            // Max distance for a projectile affected by gravity until it hits the ground at the same height as the fire point
+            return ProjectileData.GetSquaredProjectileSpeed() * Math::Sin(2 * Math::DegreesToRadians(45)) / (ProjectileData.Gravity * ProjectileData.GravityMultiplier);
         }
-        return 0;
+        else
+        {
+            // Max distance for a projectile not affected by gravity
+            return ProjectileData.Speed * ProjectileData.LifeTimeMax;
+        } 
     }
 
     UFUNCTION()
