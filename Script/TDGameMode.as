@@ -4,6 +4,8 @@ event void FOnWaveDownTimeStart();
 
 class ATDGameMode : ALobbyGameMode
 {
+    default bUseSeamlessTravel = true;
+
     // The time between waves
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
     float WaveIntermissionTime = 10.0f;
