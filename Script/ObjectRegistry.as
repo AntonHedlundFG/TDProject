@@ -20,6 +20,15 @@ class UObjectRegistry : UGameInstanceSubsystem
         for (int i = 0; i < Objects.Num(); i++)
         {
             AActor Current = Cast<AActor>(Objects[i]);
+
+            //When reloading a level, some actors seem to not de-register properly, giving nullptr errors.
+            if (Current == nullptr)
+            {
+                Objects.RemoveAtSwap(i);
+                i--;
+                continue;
+            }
+
             float Distance = Location.Distance(Current.GetActorLocation());
             if (Distance < MinDistance && Distance < MaxDistance)
             {
@@ -40,6 +49,15 @@ class UObjectRegistry : UGameInstanceSubsystem
         for (int i = 0; i < Objects.Num(); i++)
         {
             AActor Current = Cast<AActor>(Objects[i]);
+
+            //When reloading a level, some actors seem to not de-register properly, giving nullptr errors.
+            if (Current == nullptr)
+            {
+                Objects.RemoveAtSwap(i);
+                i--;
+                continue;
+            }
+
             float Distance = Location.Distance(Current.GetActorLocation());
             if (Distance < MaxDistance)
             {
