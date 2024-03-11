@@ -19,6 +19,8 @@ class ATDGameMode : ALobbyGameMode
     UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "EnemySpawn")
     bool bHasManuallyStarted = false;
 
+    bool bGameIsOver = false;
+
     // Array of active spawners
     TArray<ATDEnemySpawner> EnemySpawners;
 
@@ -37,6 +39,8 @@ class ATDGameMode : ALobbyGameMode
         if (IsValid(GetWorld().GetGameState()))
         {
             GameState = Cast<ATDGameState>(GetWorld().GetGameState());
+            bGameIsOver = false;
+            GameState.OnGameLostEvent.AddUFunction(this, n"OnGameLost");
         }
         UpdateGameState();
     }
@@ -44,7 +48,7 @@ class ATDGameMode : ALobbyGameMode
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
-        if(EnemySpawners.Num() <= 0) return;
+        if(EnemySpawners.Num() <= 0 || bGameIsOver) return;
 
         // Checks if all spawners finished spawning current wave
         CheckWaveCompleted();
@@ -131,6 +135,12 @@ class ATDGameMode : ALobbyGameMode
             GameState.bGameHasStarted = true;
         }
         GameState.NextCountdownEndTime = 0.0f;
+    }
+
+    UFUNCTION()
+    void OnGameLost()
+    {
+        bGameIsOver = true;
     }
 
 }
