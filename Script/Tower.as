@@ -24,6 +24,8 @@
     
     UPROPERTY(Category = "Tower")
     FName TowerName = FName("Tower");
+    UPROPERTY(Category = "Tower")
+    int TowerPrice = 100;
     // Range of the tower in cm
     UPROPERTY(Category = "Tower")
     float Range = 1000.0f;
@@ -165,7 +167,6 @@
                     1.0f );
             }
         }
-
 
     }
 

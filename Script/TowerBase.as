@@ -1,4 +1,4 @@
-﻿class ATowerTest : AActor
+﻿class ATowerBase : AActor
 {
     default bReplicates = true;
 
@@ -19,10 +19,6 @@
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
     UPlayerColorsDataAsset PlayerColors;
 
-    // Debug
-    UPROPERTY(Category = "Debug")
-    bool bDebugTracking = false;
-
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
@@ -30,7 +26,7 @@
         if (System::IsServer())
         {
             //Bind InteractableComponent delegate functions.
-            InteractableComp.OnInteractDelegate.BindUFunction(this, n"Interact");
+            InteractableComp.OnLocalInteractDelegate.BindUFunction(this, n"LocalInteract_BP");
             InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
         }
 
@@ -48,15 +44,17 @@
     }
 
     UFUNCTION(BlueprintEvent)
-    private void Interact_BP(APlayerController User, uint8 Param)
+    private void LocalInteract_BP(APlayerController User, uint8 Param)
     {
         
     }
 
+
+    //perhaps not needed?
     UFUNCTION()
-    private void Interact(APlayerController User, uint8 Param)
+    private void LocalInteract(APlayerController User, uint8 Param)
     {
-        Interact_BP(User, Param);
+        LocalInteract_BP(User, Param);
     }
 
     UFUNCTION()
