@@ -10,6 +10,9 @@
     default Mesh.bVisible = true;
     UPROPERTY(DefaultComponent)
     UInteractableComponent InteractableComp;
+
+    UPROPERTY()
+    TArray<TSubclassOf<ATower>> BuildableTowers;
     
    
     // Owning player index
@@ -23,11 +26,12 @@
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
+        //Bind InteractableComponent delegate functions.
+        InteractableComp.OnLocalInteractDelegate.BindUFunction(this, n"LocalInteract_BP");
         if (System::IsServer())
         {
-            //Bind InteractableComponent delegate functions.
-            InteractableComp.OnLocalInteractDelegate.BindUFunction(this, n"LocalInteract_BP");
             InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
+            InteractableComp.OnInteractDelegate.BindUFunction(this, n"Build");
         }
 
         if (PlayerColors != nullptr)
@@ -49,21 +53,13 @@
         
     }
 
-
-    //perhaps not needed?
     UFUNCTION()
-    private void LocalInteract(APlayerController User, uint8 Param)
-    {
-        LocalInteract_BP(User, Param);
-    }
-
-    UFUNCTION()
-    private bool CanInteract(APlayerController User, uint8 Param)
+    bool CanInteract(APlayerController User, uint8 Param)
     {
         ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
-        if (PS != nullptr)
+        if (PS == nullptr || BuildableTowers[Param] == nullptr || PS.PlayerIndex != OwningPlayerIndex)
         {
-            return PS.PlayerIndex == OwningPlayerIndex;
+            return false;
         }
 
         return true;
@@ -71,15 +67,17 @@
 
 
     UFUNCTION()
-    void Build(TSubclassOf<ATower> tower)
+    void Build(APlayerController User, uint8 Param)
     {
         if(!System::IsServer()) return;
 
-        if(tower == nullptr) return;
+        if(BuildableTowers[Param] == nullptr) return;
 
-        ATower SpawnedTower = Cast<ATower>(SpawnActor(tower, this.GetActorLocation(), this.GetActorRotation()));
+        ATower SpawnedTower = Cast<ATower>(SpawnActor(BuildableTowers[Param], this.GetActorLocation(), this.GetActorRotation(), FName(), true ));
         SpawnedTower.OwningPlayerIndex = this.OwningPlayerIndex;
+        SpawnedTower.SetActorLabel(DefaultActorLabel);
         SpawnedTower.bIsBuilt = true;
+        FinishSpawningActor(SpawnedTower);
         SpawnedTower.OnRep_IsBuilt();
 
         this.DestroyActor();

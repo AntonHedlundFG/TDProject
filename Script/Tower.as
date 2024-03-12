@@ -57,7 +57,7 @@
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
     bool bLockFireDirection = false;
     // Owning player index
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
     uint8 OwningPlayerIndex = 0;
     // Player colors data asset
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
@@ -130,16 +130,7 @@
         }
 
 
-        if (PlayerColors != nullptr)
-        {
-            FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
-            TArray<UActorComponent> OutComponents;
-            GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
-            for (UActorComponent Comp : OutComponents)
-            {
-                Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
-            }
-        }
+        SetPlayerColor();
 
     }
 
@@ -168,6 +159,21 @@
             }
         }
 
+    }
+
+    UFUNCTION()
+    private void SetPlayerColor()
+    {
+        if (PlayerColors != nullptr)
+        {
+            FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
+            TArray<UActorComponent> OutComponents;
+            GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
+            for (UActorComponent Comp : OutComponents)
+            {
+                Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
+            }
+        }
     }
 
     UFUNCTION()
@@ -343,23 +349,24 @@
     void ToggleVisibleMesh()
     {
 
-            FinishedMeshRoot.SetVisibility(bIsBuilt);
-            TArray<USceneComponent> Children;
-            FinishedMeshRoot.GetChildrenComponents(true, Children);
-            for (int i = 0; i < Children.Num(); i++)
-            {
-                Children[i].SetVisibility(FinishedMeshRoot.IsVisible());
-            }
+        SetPlayerColor();
+        FinishedMeshRoot.SetVisibility(bIsBuilt);
+        TArray<USceneComponent> Children;
+        FinishedMeshRoot.GetChildrenComponents(true, Children);
+        for (int i = 0; i < Children.Num(); i++)
+        {
+            Children[i].SetVisibility(FinishedMeshRoot.IsVisible());
+        }
 
-            PreviewMeshRoot.SetVisibility(!bIsBuilt);
+        PreviewMeshRoot.SetVisibility(!bIsBuilt);
 
-            Children.Empty();
-            PreviewMeshRoot.GetChildrenComponents(true, Children);
-            for (int i = 0; i < Children.Num(); i++)
-            {
-                Children[i].SetVisibility(PreviewMeshRoot.IsVisible());
-            }
-        
+        Children.Empty();
+        PreviewMeshRoot.GetChildrenComponents(true, Children);
+        for (int i = 0; i < Children.Num(); i++)
+        {
+            Children[i].SetVisibility(PreviewMeshRoot.IsVisible());
+        }
+
     }
 
     UFUNCTION()
