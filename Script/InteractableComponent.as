@@ -12,6 +12,10 @@ class UInteractableComponent : USceneComponent
     UPROPERTY(NotVisible)
     FOnInteractDelegate OnInteractDelegate;
 
+    //Only relevant if bIsLocallyInteractable = true;
+    UPROPERTY(NotVisible)
+    FOnInteractDelegate OnLocalInteractDelegate;
+
     //Can be bound, if unbound interaction is always available. If the bound functions returns false, the interaction fails.
     UPROPERTY(NotVisible)
     FCanInteractDelegate CanInteractDelegate;
@@ -36,6 +40,14 @@ class UInteractableComponent : USceneComponent
         {
             OnInteractDelegate.Execute(ControllerUsing, Param);
         }
+        return bCanInteract;
+    }
+
+    bool TryLocalInteract(APlayerController User, uint8 Param = 0)
+    {
+        const bool bCanInteract = (CanInteractDelegate.IsBound() ? CanInteractDelegate.Execute(User, Param) : true);
+        if (bCanInteract)
+            OnLocalInteractDelegate.Execute(User, Param);
         return bCanInteract;
     }
 
@@ -114,8 +126,19 @@ class UInteractionComponent : UActorComponent
         UInteractableComponent Nearest = SearchForInteractables();
         if (!IsValid(Nearest)) return false;
 
-        Server_TryInteract(User, Nearest, Param);
+        if (!Nearest.bIsLocallyInteractable)
+            Server_TryInteract(User, Nearest, Param);
+        else
+        {
+            Local_TryInteract(User, Nearest, Param);
+        }
         return true;
+    }
+
+    UFUNCTION(NotBlueprintCallable)
+    void Local_TryInteract(APlayerController User, UInteractableComponent Target, uint8 Param = 0)
+    {
+        Target.TryLocalInteract(User, Param);
     }
 
     //This is called automatically upon interaction with an UInteractableComponent with bIsLocallyInteractable = true.
