@@ -26,9 +26,6 @@
     FName TowerName = FName("Tower");
     UPROPERTY(Category = "Tower")
     int TowerPrice = 100;
-    // Range of the tower in cm
-    UPROPERTY(Category = "Tower")
-    float Range = 1000.0f;
     // Fire rate in seconds
     UPROPERTY(Category = "Tower")
     float FireRate = 1.0f;
@@ -115,11 +112,14 @@
             // Calculate the max range for the projectile if it is affected by gravity
             if(ProjectileData.BIsAffectedByGravity())
             {
-                // Lower it if it is less than the editor set value
-                float MaxRange = CalculateMaxDistanceForProjectile();
-                if(MaxRange < Range)
+                if(!ProjectileData.bManualMaxRange) 
                 {
-                    Range = MaxRange;
+                    // Lower it if it is less than the editor set value
+                    float MaxRange = CalculateMaxDistanceForProjectile();
+                    if(MaxRange < ProjectileData.MaxRange)
+                    {
+                        ProjectileData.MaxRange = MaxRange;
+                    }
                 }
             }
         }
@@ -151,7 +151,7 @@
             {
                 System::DrawDebugArrow(
                     FirePoint.GetWorldLocation(),
-                    FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * Range,
+                    FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * ProjectileData.MaxRange,
                     10.0f,
                     FLinearColor::Red,
                     0.0f,
@@ -242,7 +242,7 @@
             return;
         }
 
-        ATDEnemy ClosestEnemy = Cast<ATDEnemy>(UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), Range));
+        ATDEnemy ClosestEnemy = Cast<ATDEnemy>(UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), ProjectileData.MaxRange));
         if(IsValid(ClosestEnemy))
         {
             Target = ClosestEnemy.GetTargetComponent();
@@ -258,7 +258,7 @@
     bool IsTargetInRange(FVector InTargetLocation)
     {
         TargetDistance = (InTargetLocation - ActorLocation).Size();
-        return TargetDistance <= Range;
+        return TargetDistance <= ProjectileData.MaxRange;
     }
 
     UFUNCTION()
