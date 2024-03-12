@@ -141,8 +141,8 @@ class UInteractionComponent : UActorComponent
         Target.TryLocalInteract(User, Param);
     }
 
-    //This is called automatically upon interaction with an UInteractableComponent with bIsLocallyInteractable = true.
-    //If it's false, you can call this function manually from the UI if relevant.
+    //This is called automatically upon interaction with an UInteractableComponent with bIsLocallyInteractable = false.
+    //If it's true, you can call this function manually from the UI if relevant.
     UFUNCTION(Server)
     void Server_TryInteract(APlayerController User, UInteractableComponent Target, uint8 Param = 0)
     {
@@ -159,4 +159,48 @@ class UInteractionComponent : UActorComponent
         return Nearest.CanInteract(User);
     }
 
+}
+
+
+UCLASS(Abstract)
+class UExampleLocalInteractable : UInteractableComponent
+{
+    default bIsLocallyInteractable = true;
+
+    UFUNCTION(BlueprintOverride)
+    void BeginPlay()
+    {
+        Super::BeginPlay();
+        
+        OnLocalInteractDelegate.BindUFunction(this, n"LocalInteraction");
+
+        if(System::IsServer())
+        {
+            OnInteractDelegate.BindUFunction(this, n"ServerInteraction");
+            CanInteractDelegate.BindUFunction(this, n"CanAfford");
+        }
+
+    }
+
+    UFUNCTION()
+    void LocalInteraction(APlayerController User, uint8 Param)
+    {
+        //This happens locally. Create UI Widget here, and call Server_TryInteract() from the UI.
+    }
+
+    UFUNCTION()
+    bool CanAfford(APlayerController User, uint8 Param)
+    {
+        //Check costs here, using Cast<ATDPlayerState>(User.PlayerState).Gold. 
+        //I think it's OK to bind this only on server, and then handle which UI elements are affordable in the Widget instead.
+        return true; 
+    }
+
+    UFUNCTION()
+    void ServerInteraction(APlayerController User, uint8 Param)
+    {
+        //Perform purchase. If CanAfford checks costs, you don't need to do so here.
+    }
+
+    
 }
