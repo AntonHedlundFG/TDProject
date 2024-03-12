@@ -113,7 +113,6 @@ class AProjectile : AActor
             
             if(IsValid(HealthSystem) && HealthSystem.IsAlive() && !HitActors.Contains(Target))
             {
-                Print("Hit: " + Target.GetName() + " for " + ProjectileData.Damage + " damage");
                 HitActors.Add(Target);
                 HealthSystem.TakeDamage(ProjectileData.Damage);
                 
@@ -228,10 +227,8 @@ class ANonTrackingProjectile : AProjectile
 
 };
 
-class AHitScanProjectile : AProjectile
+class AHitScanSingleProjectile : AProjectile
 {
-    UPROPERTY(EditAnywhere, Category = "Projectile")
-    float Duration = 0.1f;
 
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()
@@ -242,28 +239,42 @@ class AHitScanProjectile : AProjectile
     void Shoot() override
     {
         Super::Shoot();
-        TArray<FHitResult> HitResults;
-        System::LineTraceMulti(
-            ActorLocation, 
-            ActorLocation + ActorForwardVector * 10000.0f,
-             ETraceTypeQuery::TraceTypeQuery1, 
-             false, 
-             TArray<AActor>(), 
-             EDrawDebugTrace::ForDuration, 
-             HitResults, 
-             true,
-                FLinearColor::Red,
-                FLinearColor::Green,
-                Duration
-        );
-        Print("HitResults: " + HitResults.Num());
-        for (FHitResult HitResult : HitResults)
+        FHitResult HitResult;
+        if (System::LineTraceSingle(ActorLocation, ActorLocation + ActorForwardVector * ProjectileData.MaxRange, 
+            ETraceTypeQuery::TraceTypeQuery1, false, TArray<AActor>(), EDrawDebugTrace::ForDuration, 
+            HitResult, true, FLinearColor::Red, FLinearColor::Green, ProjectileData.LifeTimeMax) 
+            && IsValid(HitResult.Actor))
         {
-            if (IsValid(HitResult.Actor))
-            {
-                DamageTarget(HitResult.Actor);
-            }
+            DamageTarget(HitResult.Actor);
         }
+    }
+
+}
+
+class AHitScanMultiProjectile : AProjectile
+{
+    UFUNCTION(BlueprintOverride)
+    void ConstructionScript()
+    {
+        ProjectileData.Speed = MAX_flt;    
+    }
+
+    void Shoot() override
+    {
+        Super::Shoot();
+        TArray<FHitResult> HitResults;
+        System::LineTraceMulti(ActorLocation, ActorLocation + ActorForwardVector * ProjectileData.MaxRange,
+            ETraceTypeQuery::TraceTypeQuery3,false, TArray<AActor>(), EDrawDebugTrace::ForDuration, 
+            HitResults, true, FLinearColor::Red, FLinearColor::Green, ProjectileData.LifeTimeMax);
+                
+            for (FHitResult HitResult : HitResults)
+            {
+                if (IsValid(HitResult.Actor))
+                {
+                    DamageTarget(HitResult.Actor);
+                }
+            }
+        
     }
 
 }
