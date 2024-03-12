@@ -63,10 +63,10 @@ class AProjectile : AActor
         Move(DeltaSeconds);
     }
 
-    UFUNCTION(BlueprintEvent)
+    UFUNCTION()
     void Move(float DeltaSeconds) {};
 
-    UFUNCTION(BlueprintEvent)
+    UFUNCTION()
     void Despawn() 
     {
         if (bExplodeRemaining)
@@ -75,8 +75,6 @@ class AProjectile : AActor
         }
         // DonClear despawn timer
         System::ClearAndInvalidateTimerHandle(DespawnTimer);
-        // Move way out of the way as to not trigger trigger overlap events again
-        SetActorLocation(FVector(-10000.0f, -10000.0f, -10000.0f));
         // Set inactive
         bIsActive = false;
         // Return to pool
@@ -163,7 +161,6 @@ class ATrackingProjectile : AProjectile
         }
     }
 
-    UFUNCTION(BlueprintOverride)
     void Move(float DeltaSeconds) override
     {
         if(!IsValid(Target))
@@ -205,7 +202,6 @@ class ANonTrackingProjectile : AProjectile
         ProjectileVelocity = ActorForwardVector * ProjectileData.Speed;
     }
 
-    UFUNCTION(BlueprintOverride)
     void Move(float DeltaSeconds) override
     {
         // Apply gravity if this projectile is affected by it
@@ -229,7 +225,6 @@ class ANonTrackingProjectile : AProjectile
 
 class AHitScanSingleProjectile : AProjectile
 {
-
     UFUNCTION(BlueprintOverride)
     void ConstructionScript()
     {
@@ -241,14 +236,33 @@ class AHitScanSingleProjectile : AProjectile
         Super::Shoot();
         FHitResult HitResult;
         if (System::LineTraceSingle(ActorLocation, ActorLocation + ActorForwardVector * ProjectileData.MaxRange, 
-            ETraceTypeQuery::TraceTypeQuery1, false, TArray<AActor>(), EDrawDebugTrace::ForDuration, 
-            HitResult, true, FLinearColor::Red, FLinearColor::Green, ProjectileData.LifeTimeMax) 
+            ETraceTypeQuery::TraceTypeQuery1, false, TArray<AActor>(), EDrawDebugTrace::None, 
+            HitResult, true ) 
             && IsValid(HitResult.Actor))
         {
+            SpawnLaserBeam(HitResult.Location);
             DamageTarget(HitResult.Actor);
         }
+
     }
 
+    UFUNCTION(BlueprintEvent)
+    void SpawnLaserBeam(FVector End)
+    {
+        Print(f"SpawnLaserBeam is not implemented in BP for this class: {GetName()}");
+    }
+
+    UFUNCTION(BlueprintEvent)
+    void HideLaserBeam()
+    {
+        Print(f"HideLaserBeam is not implemented in BP for this class: {GetName()}");
+    }
+
+    void Despawn() override
+    {
+        Super::Despawn();
+        HideLaserBeam();
+    }
 }
 
 class AHitScanMultiProjectile : AProjectile
