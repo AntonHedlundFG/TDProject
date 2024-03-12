@@ -1,8 +1,13 @@
-delegate void FOnInteractDelegate(APlayerController User);
-delegate bool FCanInteractDelegate(APlayerController User);
+delegate void FOnInteractDelegate(APlayerController User, uint8 Param);
+delegate bool FCanInteractDelegate(APlayerController User, uint8 Param);
 
 class UInteractableComponent : USceneComponent
 {
+    //If true, interaction occurs locally and does not notify server. Only use for things that should open UI elements, and the like.
+    //If servers need to be notified of UI selections, use the Server_TryInteract() function on the UInteractionComponent manually.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated)
+    bool bIsLocallyInteractable = false;
+
     //Must be bound!
     UPROPERTY(NotVisible)
     FOnInteractDelegate OnInteractDelegate;
@@ -11,14 +16,14 @@ class UInteractableComponent : USceneComponent
     UPROPERTY(NotVisible)
     FCanInteractDelegate CanInteractDelegate;
 
-    bool CanInteract(APlayerController ControllerUsing)
+    bool CanInteract(APlayerController ControllerUsing, uint8 Param = 0)
     {
         if (!CanInteractDelegate.IsBound())
             return true;
-        return CanInteractDelegate.Execute(ControllerUsing);
+        return CanInteractDelegate.Execute(ControllerUsing, Param);
     }
 
-    bool TryInteract(APlayerController ControllerUsing)
+    bool TryInteract(APlayerController ControllerUsing, uint8 Param = 0)
     {
         if (!OnInteractDelegate.IsBound())
         {
@@ -26,10 +31,10 @@ class UInteractableComponent : USceneComponent
             return false;
         }
 
-        const bool bCanInteract = (CanInteractDelegate.IsBound() ? CanInteractDelegate.Execute(ControllerUsing) : true);
+        const bool bCanInteract = (CanInteractDelegate.IsBound() ? CanInteractDelegate.Execute(ControllerUsing, Param) : true);
         if (bCanInteract)
         {
-            OnInteractDelegate.Execute(ControllerUsing);
+            OnInteractDelegate.Execute(ControllerUsing, Param);
         }
         return bCanInteract;
     }
@@ -104,19 +109,21 @@ class UInteractionComponent : UActorComponent
     // Uses SearchForInteractables() to attempt an interaction with the currently selected interactable.
     // Returns true if a nearby interactable is found, even if the interaction fails!
     UFUNCTION(BlueprintCallable)
-    bool TryInteract(APlayerController User)
+    bool TryInteract(APlayerController User, uint8 Param = 0)
     {
         UInteractableComponent Nearest = SearchForInteractables();
         if (!IsValid(Nearest)) return false;
 
-        Server_TryInteract(User, Nearest);
+        Server_TryInteract(User, Nearest, Param);
         return true;
     }
 
+    //This is called automatically upon interaction with an UInteractableComponent with bIsLocallyInteractable = true.
+    //If it's false, you can call this function manually from the UI if relevant.
     UFUNCTION(Server)
-    void Server_TryInteract(APlayerController User, UInteractableComponent Target)
+    void Server_TryInteract(APlayerController User, UInteractableComponent Target, uint8 Param = 0)
     {
-        Target.TryInteract(User);
+        Target.TryInteract(User, Param);
     }
 
     // Uses SearchForInteractables to check if an interaction with the currently selected interactable is possible.

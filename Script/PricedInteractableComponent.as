@@ -36,7 +36,7 @@ class UPricedInteractableComponent : UInteractableComponent
     }
 
     UFUNCTION()
-    bool CanPurchase(APlayerController User)
+    bool CanPurchase(APlayerController User, uint8 Param)
     {
         if (bIsPurchased) 
             return false;
@@ -52,7 +52,7 @@ class UPricedInteractableComponent : UInteractableComponent
     }
 
     UFUNCTION()
-    void Purchase(APlayerController User)
+    void Purchase(APlayerController User, uint8 Param)
     {
         ATDPlayerState State = Cast<ATDPlayerState>(User.PlayerState);
         if (State == nullptr)
@@ -61,7 +61,7 @@ class UPricedInteractableComponent : UInteractableComponent
             return;
         }
 
-        if (!CanPurchase(User))
+        if (!CanPurchase(User, Param))
         {
             Print("User cannot afford purchase. This should not happen, as costs should be checked before calling Purchase()");
             return;   

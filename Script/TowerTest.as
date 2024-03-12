@@ -48,19 +48,19 @@
     }
 
     UFUNCTION(BlueprintEvent)
-    private void Interact_BP(APlayerController User)
+    private void Interact_BP(APlayerController User, uint8 Param)
     {
         
     }
 
     UFUNCTION()
-    private void Interact(APlayerController User)
+    private void Interact(APlayerController User, uint8 Param)
     {
-        Interact_BP(User);
+        Interact_BP(User, Param);
     }
 
     UFUNCTION()
-    private bool CanInteract(APlayerController User)
+    private bool CanInteract(APlayerController User, uint8 Param)
     {
         ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
         if (PS != nullptr)
