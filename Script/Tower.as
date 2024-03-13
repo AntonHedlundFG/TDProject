@@ -90,7 +90,6 @@
     void BeginPlay()
     {  
         Super::BeginPlay();
-        SetPlayerColor();
         ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
 
         if (System::IsServer())
@@ -164,21 +163,6 @@
             }
         }
 
-    }
-
-    UFUNCTION()
-    private void SetPlayerColor()
-    {
-        if (PlayerColors != nullptr)
-        {
-            FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
-            TArray<UActorComponent> OutComponents;
-            GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
-            for (UActorComponent Comp : OutComponents)
-            {
-                Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
-            }
-        }
     }
 
     UFUNCTION()
