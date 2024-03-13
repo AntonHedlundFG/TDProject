@@ -13,6 +13,8 @@
 
     UPROPERTY()
     TArray<TSubclassOf<ATower>> BuildableTowers;
+    UPROPERTY()
+    TArray<UPurchasable> Purchasables;
     
    
     // Owning player index
@@ -71,14 +73,19 @@
     {
         if(!System::IsServer()) return;
 
-        if(BuildableTowers[Param] == nullptr) return;
+        if(Purchasables[Param] == nullptr) return;
 
-        ATower SpawnedTower = Cast<ATower>(SpawnActor(BuildableTowers[Param], this.GetActorLocation(), this.GetActorRotation(), FName(), true ));
-        SpawnedTower.OwningPlayerIndex = this.OwningPlayerIndex;
-        SpawnedTower.SetActorLabel(DefaultActorLabel);
-        FinishSpawningActor(SpawnedTower);
+        Purchasables[Param].OnPurchase(this);
 
-        this.DestroyActor();
+
+        // if(BuildableTowers[Param] == nullptr) return;
+
+        // ATower SpawnedTower = Cast<ATower>(SpawnActor(BuildableTowers[Param], this.GetActorLocation(), this.GetActorRotation(), FName(), true ));
+        // SpawnedTower.OwningPlayerIndex = this.OwningPlayerIndex;
+        // SpawnedTower.SetActorLabel(DefaultActorLabel);
+        // FinishSpawningActor(SpawnedTower);
+
+        // this.DestroyActor();
     }
 
 
