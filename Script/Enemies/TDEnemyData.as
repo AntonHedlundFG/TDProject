@@ -15,5 +15,7 @@
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     FLinearColor Color;
     UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
+    bool bRemoveDamageEffectsOnCreation = true;
+    UPROPERTY(BlueprintReadWrite, Category = "Enemy Settings")
     UTDEnemyData NextLevelEnemy;
 }

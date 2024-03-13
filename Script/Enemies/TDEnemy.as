@@ -76,6 +76,8 @@ class ATDEnemy : AActor
         KillBounty = EnemyData.KillBounty;
         Damage = EnemyData.Damage;
         MoveSpeed = EnemyData.MoveSpeed;
+        if (EnemyData.bRemoveDamageEffectsOnCreation)
+            DamageTypeComponent.RemoveAllInstances();
         // Set material
         Mesh.SetMaterial(0, EnemyData.Material);
         Mesh.SetVectorParameterValueOnMaterials(FName("Tint"), EnemyData.Color.ToFVector());
@@ -144,6 +146,7 @@ class ATDEnemy : AActor
     UFUNCTION()
     void EnemyDeath()
     {
+        if (!IsActive) return;
         Path = nullptr;
         IsActive = false;
         OnEnemyDeath.Broadcast(this);

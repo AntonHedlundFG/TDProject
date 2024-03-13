@@ -41,6 +41,21 @@ class UTDDamageTypeComponent : UActorComponent
         if (DamageTypeInstances[DamageType] < 1)
             DamageTypeInstances.Remove(DamageType);
     }
+
+    UFUNCTION(BlueprintCallable, Category = "Damage Effects")
+    void RemoveAllInstances()
+    {
+        TMap<UTDDamageType, int> InstancesCopy = DamageTypeInstances;
+        for (auto Pair : InstancesCopy)
+        {
+            RemoveDamageType(Pair.Key, Pair.Value);
+        }
+        for (auto Delayed : DelayedRemovals)
+        {
+            Delayed.Disable();
+        }
+        DelayedRemovals.Empty();
+    }
 }
 
 //This is an internal class for UTDDamageTypeComponent, do not use it.
@@ -50,13 +65,14 @@ class UDelayedRemoval : UObject
     UTDDamageType DamageTypeStored;
     float DurationStored;
     int AmountStored;
+    FTimerHandle Timer;
     void Setup(UTDDamageTypeComponent Target, UTDDamageType DamageType, float Duration, int Amount)
     {
         TargetStored = Target;
         DamageTypeStored = DamageType;
         DurationStored = Duration;
         AmountStored = Amount;
-        System::SetTimer(this, n"Perform", Duration, false);
+        Timer = System::SetTimer(this, n"Perform", Duration, false);
     }
 
     UFUNCTION()
@@ -65,6 +81,12 @@ class UDelayedRemoval : UObject
         if (!IsValid(TargetStored)) return;
         TargetStored.RemoveDamageType(DamageTypeStored, AmountStored);
         TargetStored.DelayedRemovals.RemoveSingleSwap(this);
+    }
+
+    UFUNCTION()
+    void Disable()
+    {
+        System::ClearAndInvalidateTimerHandle(Timer);
     }
 }
 

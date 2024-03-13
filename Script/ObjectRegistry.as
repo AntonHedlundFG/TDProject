@@ -100,7 +100,7 @@ mixin void RegisterObject(UObject Object, ERegisteredObjectTypes Type)
 mixin void DeregisterObject(UObject Object, ERegisteredObjectTypes Type)
 {
     UObjectRegistry ObjectRegistry = UObjectRegistry::Get();
-    if(IsValid(ObjectRegistry)) 
+    if(IsValid(ObjectRegistry) && ObjectRegistry.ObjectLists.Contains(Type)) 
     {
         ObjectRegistry.ObjectLists[Type].Objects.RemoveSingleSwap(Object);
         if (ObjectRegistry.ObjectLists[Type].Objects.IsEmpty())
