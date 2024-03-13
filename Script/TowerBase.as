@@ -76,9 +76,7 @@
         ATower SpawnedTower = Cast<ATower>(SpawnActor(BuildableTowers[Param], this.GetActorLocation(), this.GetActorRotation(), FName(), true ));
         SpawnedTower.OwningPlayerIndex = this.OwningPlayerIndex;
         SpawnedTower.SetActorLabel(DefaultActorLabel);
-        SpawnedTower.bIsBuilt = true;
         FinishSpawningActor(SpawnedTower);
-        SpawnedTower.OnRep_IsBuilt();
 
         this.DestroyActor();
     }

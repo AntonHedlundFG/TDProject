@@ -2,25 +2,20 @@
 {
     default bReplicates = true;
 
-    // Components
+    // -- Components --
     UPROPERTY(DefaultComponent, RootComponent)
     USceneComponent Root;
+
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent FinishedMeshRoot;
     default FinishedMeshRoot.bVisible = false;
+
     UPROPERTY(DefaultComponent, Attach = FinishedMeshRoot)
     UStaticMeshComponent FinishedMesh;
-    default FinishedMesh.bVisible = false;
-    UPROPERTY(DefaultComponent, Attach = Root)
-    USceneComponent PreviewMeshRoot;
-    default PreviewMeshRoot.bVisible = true;
-    UPROPERTY(DefaultComponent, Attach = PreviewMeshRoot)
-    UStaticMeshComponent PreviewMesh;
-    default PreviewMesh.bVisible = true;
-    UPROPERTY(DefaultComponent)
-    UPricedInteractableComponent InteractableComp;
+
     UPROPERTY(DefaultComponent, Attach = FinishedMesh)
     USceneComponent FirePoint;
+    // ---------------
     
     UPROPERTY(Category = "Tower")
     FName TowerName = FName("Tower");
@@ -70,9 +65,6 @@
     UPROPERTY(Category = "Debug")
     bool bDebugTracking = false;
 
-    // Tower state
-    UPROPERTY(NotVisible, Replicated, ReplicatedUsing = OnRep_IsBuilt, Category = "Tower")
-    bool bIsBuilt = false;
     //--- Tracking ---//
     UPROPERTY(NotVisible, Replicated)
     USceneComponent Target;
@@ -94,21 +86,23 @@
 
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
-    {
+    {  
+        SetPlayerColor();
+        ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
+
         if (System::IsServer())
         {
-            //Bind InteractableComponent delegate functions.
-            InteractableComp.OnPurchasedDelegate.BindUFunction(this, n"Interact");
-            InteractableComp.CanBePurchasedDelegate.BindUFunction(this, n"CanInteract");
+            if (TryFetchingProjectileData())
+                StartFiringTimers();
+            else
+                DestroyActor();
         }
+    }
 
-        //Makes sure Mesh visibilities are correct from the start.
-        OnRep_IsBuilt();
-
+    bool TryFetchingProjectileData()
+    {
         if(ProjectileClass != nullptr)
         {
-            ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
-
             // Calculate the max range for the projectile if it is affected by gravity
             if(ProjectileData.BIsAffectedByGravity())
             {
@@ -127,22 +121,30 @@
         {
             Print(f"No projectile class set for tower: {GetName()} -> Destroying actor");
             DestroyActor();
+            return false;
         }
+        return true;
+    }
 
-
-        SetPlayerColor();
-
+    void StartFiringTimers()
+    {
+        FireTimerHandle = System::SetTimer(this, n"Fire", FireRate, true);
+        TargetUpdateTimerHandle = System::SetTimer(this, n"UpdateTarget", TargetUpdateRate, true);
+        if(bShouldTrackTarget)
+        {
+            TargetTrackingTimerHandle = System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
+        }
+        // Get GameState and bind to GameEnded delegate
+        ATDGameState GameState = Cast<ATDGameState>(GetWorld().GetGameState());
+        if(IsValid(GameState))
+        {
+            GameState.OnGameLostEvent.AddUFunction(this, n"OnGameEnded");
+        }
     }
 
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
-
-        if(!bIsBuilt)
-        {
-            return;
-        }
-
         if(bShouldTrackTarget && IsValid(Target))
         {
             RotateToTarget(DeltaSeconds);
@@ -177,62 +179,20 @@
     }
 
     UFUNCTION()
-    private void Interact(APlayerController User)
-    {
-        bIsBuilt = true;
-        OnRep_IsBuilt();
-    }
-
-    UFUNCTION()
-    private bool CanInteract(APlayerController User)
-    {
-        ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
-        if (PS != nullptr)
-        {
-            return PS.PlayerIndex == OwningPlayerIndex;
-        }
-
-        return true;
-    }
-
-    UFUNCTION()
     void Fire()
     {
-        if (ProjectileClass != nullptr && IsValid(Target) && bIsBuilt)
+        if (ProjectileClass != nullptr && IsValid(Target))
         {
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot(ProjectileData);
         }
-    }
-
-    UFUNCTION()
-    void OnRep_IsBuilt()
-    {
-        // On server : Start firing and tracking timers if the tower is built
-        if (System::IsServer() && bIsBuilt)
-        {
-            FireTimerHandle = System::SetTimer(this, n"Fire", FireRate, true);
-            TargetUpdateTimerHandle = System::SetTimer(this, n"UpdateTarget", TargetUpdateRate, true);
-            if(bShouldTrackTarget)
-            {
-                TargetTrackingTimerHandle = System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
-            }
-            // Get GameState and bind to GameEnded delegate
-            ATDGameState GameState = Cast<ATDGameState>(GetWorld().GetGameState());
-            if(IsValid(GameState))
-            {
-                GameState.OnGameLostEvent.AddUFunction(this, n"OnGameEnded");
-            }
-        }          
-        // On every client : Toggle the visibility of the meshes
-        ToggleVisibleMesh();
-    }
-
+    }    
+    
     UFUNCTION()
     void UpdateTarget()
     {
-        if(!System::IsServer() && (!bIsBuilt ||!bShouldTrackTarget))
+        if(!System::IsServer() && !bShouldTrackTarget)
         {
             return;
         }
@@ -343,30 +303,6 @@
 
         // Save the target's location for the next update
         TargetLocation = TargetNewLocation;
-    }
-
-    UFUNCTION()
-    void ToggleVisibleMesh()
-    {
-
-        SetPlayerColor();
-        FinishedMeshRoot.SetVisibility(bIsBuilt);
-        TArray<USceneComponent> Children;
-        FinishedMeshRoot.GetChildrenComponents(true, Children);
-        for (int i = 0; i < Children.Num(); i++)
-        {
-            Children[i].SetVisibility(FinishedMeshRoot.IsVisible());
-        }
-
-        PreviewMeshRoot.SetVisibility(!bIsBuilt);
-
-        Children.Empty();
-        PreviewMeshRoot.GetChildrenComponents(true, Children);
-        for (int i = 0; i < Children.Num(); i++)
-        {
-            Children[i].SetVisibility(PreviewMeshRoot.IsVisible());
-        }
-
     }
 
     UFUNCTION()
