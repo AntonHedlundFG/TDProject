@@ -1,6 +1,8 @@
 class UPurchasable_Upgrade : UPurchasable
 {
+    UPROPERTY()
     FProjectileData Data;
+    UPROPERTY()
     TArray<UPurchasable> NewPurchasables;
 
     void OnPurchase(ATowerBase Tower) override
