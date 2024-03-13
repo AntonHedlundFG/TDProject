@@ -2,20 +2,11 @@
 {
     default bReplicates = true;
 
-    // -- Components --
-    //UPROPERTY(DefaultComponent, RootComponent)
-    //USceneComponent Root;
-
-    UPROPERTY(DefaultComponent, Attach = Root)
-    USceneComponent FinishedMeshRoot;
-    default FinishedMeshRoot.bVisible = false;
-
-    UPROPERTY(DefaultComponent, Attach = FinishedMeshRoot)
-    UStaticMeshComponent FinishedMesh;
-
-    UPROPERTY(DefaultComponent, Attach = FinishedMesh)
+    // -- Components -- //
+    UPROPERTY(DefaultComponent)
+    USceneComponent FiringBarrelRoot;
+    UPROPERTY(DefaultComponent, Attach = FiringBarrelRoot)
     USceneComponent FirePoint;
-    // ---------------
     
     UPROPERTY(Category = "Tower")
     FName TowerName = FName("Tower");
@@ -49,13 +40,6 @@
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
     bool bLockFireDirection = false;
 
-    // Owning player index
-    // UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
-    // uint8 OwningPlayerIndex = 0;
-    // Player colors data asset
-    // UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
-    // UPlayerColorsDataAsset PlayerColors;
-    
     // Projectile class
     UPROPERTY(Category = "Tower|Projectile")
     TSubclassOf<AProjectile> ProjectileClass;
@@ -307,12 +291,11 @@
 
         if ( RotationSpeedYAxis > 0 )
         {
-            FRotator MeshRotation = FinishedMesh.GetRelativeRotation();
-            FRotator RollRotation = MeshRotation;
-            RollRotation.Roll = -TargetRotation.Pitch;
-            RollRotation = Math::RInterpTo(MeshRotation, RollRotation, DeltaSeconds, RotationSpeedYAxis);
-            FinishedMesh.SetRelativeRotation(RollRotation);
-
+            FRotator CurrentPitch = FiringBarrelRoot.GetRelativeRotation();
+            FRotator NewPitch = CurrentPitch;
+            NewPitch.Pitch = TargetRotation.Pitch;
+            NewPitch = Math::RInterpTo(CurrentPitch, NewPitch, DeltaSeconds, RotationSpeedYAxis);
+            FiringBarrelRoot.SetRelativeRotation(NewPitch);
         }
     }
 
@@ -378,19 +361,19 @@ class AStaticFireTower : ATower
     UFUNCTION(BlueprintEvent)
     void ShowShotVisual(FVector Start,FVector End)
     {
-        Print(f"ShowShotVisual is not implemented in BP for this class: {GetName()}");
+        // Implement in BP
     }
 
     UFUNCTION(BlueprintEvent)
     void ShowImpactVisual(FVector Location)
     {
-        Print(f"ShowImpactVisual is not implemented in BP for this class: {GetName()}");
+        // Implement in BP
     }
 
     UFUNCTION(BlueprintEvent)
     void HideShotVisual()
     {
-        Print(f"HideShotVisual is not implemented in BP for this class: {GetName()}");
+        // Implement in BP
     }
 
 }
