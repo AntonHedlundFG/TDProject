@@ -50,7 +50,7 @@
     }
 
     UFUNCTION(BlueprintEvent)
-    private void LocalInteract_BP(APlayerController User, uint8 Param)
+    void LocalInteract_BP(APlayerController User, uint8 Param)
     {
         
     }

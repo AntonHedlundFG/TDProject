@@ -1,6 +1,7 @@
 class UPurchasable_Upgrade : UPurchasable
 {
-    FProjectileData data;
+    FProjectileData Data;
+    TArray<UPurchasable> NewPurchasables;
 
     void OnPurchase(ATowerBase Tower) override
     {
@@ -9,7 +10,8 @@ class UPurchasable_Upgrade : UPurchasable
         ATower tower = Cast<ATower>(Tower);
         if(IsValid(tower))
         {
-            tower.ProjectileData = data;
+            tower.ProjectileData = Data;
+            tower.Purchasables = NewPurchasables;
         } 
     }
 }
