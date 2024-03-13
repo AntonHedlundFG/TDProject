@@ -11,8 +11,8 @@
     UPROPERTY(DefaultComponent)
     UInteractableComponent InteractableComp;
 
-    UPROPERTY()
-    TArray<TSubclassOf<ATower>> BuildableTowers;
+    // UPROPERTY()
+    // TArray<TSubclassOf<ATower>> BuildableTowers;
     UPROPERTY()
     TArray<UPurchasable> Purchasables;
     
@@ -21,7 +21,7 @@
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
     uint8 OwningPlayerIndex = 0;
     // Player colors data asset
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
     UPlayerColorsDataAsset PlayerColors;
 
 
@@ -59,7 +59,7 @@
     bool CanInteract(APlayerController User, uint8 Param)
     {
         ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
-        if (PS == nullptr || BuildableTowers[Param] == nullptr || PS.PlayerIndex != OwningPlayerIndex)
+        if (PS == nullptr || Purchasables[Param] == nullptr || PS.PlayerIndex != OwningPlayerIndex)
         {
             return false;
         }
@@ -88,14 +88,5 @@
         // this.DestroyActor();
     }
 
-
-    UFUNCTION()
-    void OnGameEnded()
-    {
-        if(System::IsServer())
-        {
-            SetActorTickEnabled(false);
-        }
-    }
 
 };

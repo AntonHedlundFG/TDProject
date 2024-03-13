@@ -1,10 +1,10 @@
-﻿class ATower : AActor
+﻿class ATower : ATowerBase
 {
     default bReplicates = true;
 
     // -- Components --
-    UPROPERTY(DefaultComponent, RootComponent)
-    USceneComponent Root;
+    //UPROPERTY(DefaultComponent, RootComponent)
+    //USceneComponent Root;
 
     UPROPERTY(DefaultComponent, Attach = Root)
     USceneComponent FinishedMeshRoot;
@@ -48,12 +48,14 @@
     // Lock fire direction to firepoint forward vector
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
     bool bLockFireDirection = false;
+
     // Owning player index
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
-    uint8 OwningPlayerIndex = 0;
+    // UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
+    // uint8 OwningPlayerIndex = 0;
     // Player colors data asset
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
-    UPlayerColorsDataAsset PlayerColors;
+    // UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
+    // UPlayerColorsDataAsset PlayerColors;
+    
     // Projectile class
     UPROPERTY(Category = "Tower|Projectile")
     TSubclassOf<AProjectile> ProjectileClass;
@@ -87,6 +89,7 @@
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {  
+        Super::BeginPlay();
         SetPlayerColor();
         ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
 

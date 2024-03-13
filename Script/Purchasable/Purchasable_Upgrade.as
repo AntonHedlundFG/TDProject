@@ -6,6 +6,10 @@ class UPurchasable_Upgrade : UPurchasable
     {
         Super::OnPurchase(Tower);
 
-        //Tower.ProjectileData = data;
+        ATower tower = Cast<ATower>(Tower);
+        if(IsValid(tower))
+        {
+            tower.ProjectileData = data;
+        } 
     }
 }
