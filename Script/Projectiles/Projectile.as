@@ -223,63 +223,14 @@ class ANonTrackingProjectile : AProjectile
 
 };
 
-class AHitScanSingleProjectile : AProjectile
-{
-    UFUNCTION(BlueprintOverride)
-    void ConstructionScript()
-    {
-        ProjectileData.Speed = MAX_flt;    
-    }
-
-    void Shoot() override
-    {
-        Super::Shoot();
-        FHitResult HitResult;
-        if (System::LineTraceSingle(ActorLocation, ActorLocation + ActorForwardVector * ProjectileData.MaxRange, 
-            ETraceTypeQuery::TraceTypeQuery1, false, TArray<AActor>(), EDrawDebugTrace::None, 
-            HitResult, true ) 
-            && IsValid(HitResult.Actor))
-        {
-            SpawnLaserBeam(HitResult.Location);
-            DamageTarget(HitResult.Actor);
-        }
-
-    }
-
-    UFUNCTION(BlueprintEvent)
-    void SpawnLaserBeam(FVector End)
-    {
-        Print(f"SpawnLaserBeam is not implemented in BP for this class: {GetName()}");
-    }
-
-    UFUNCTION(BlueprintEvent)
-    void HideLaserBeam()
-    {
-        Print(f"HideLaserBeam is not implemented in BP for this class: {GetName()}");
-    }
-
-    void Despawn() override
-    {
-        Super::Despawn();
-        HideLaserBeam();
-    }
-}
-
 class AHitScanMultiProjectile : AProjectile
 {
-    UFUNCTION(BlueprintOverride)
-    void ConstructionScript()
-    {
-        ProjectileData.Speed = MAX_flt;    
-    }
-
-    void Shoot() override
+    void Shoot(FProjectileData Data, TArray<FHitResult>& HitResults) 
     {
         Super::Shoot();
-        TArray<FHitResult> HitResults;
-        System::LineTraceMulti(ActorLocation, ActorLocation + ActorForwardVector * ProjectileData.MaxRange,
-            ETraceTypeQuery::TraceTypeQuery3,false, TArray<AActor>(), EDrawDebugTrace::ForDuration, 
-            HitResults, true, FLinearColor::Red, FLinearColor::Green, ProjectileData.LifeTimeMax);
+        System::LineTraceMulti(ActorLocation, ActorLocation + ActorForwardVector * Data.MaxRange,
+            ETraceTypeQuery::TraceTypeQuery3,false, TArray<AActor>(), 
+            EDrawDebugTrace::None, HitResults, true);
                 
             for (FHitResult HitResult : HitResults)
             {

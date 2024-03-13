@@ -359,3 +359,54 @@
     }
 
 };
+
+class AStaticFireTower : ATower
+{
+    UPROPERTY()
+    AProjectile ActiveProjectile;
+    
+    TArray<FHitResult> HitResults;
+
+    void Fire() override
+    {
+        if (ProjectileClass != nullptr && IsValid(Target))
+        {
+            FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
+            AHitScanMultiProjectile Projectile = Cast<AHitScanMultiProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
+            Projectile.Shoot(ProjectileData, HitResults);
+            FVector ShotEndLocation = HitResults.Num() > 0 ? HitResults.Last().Location : FirePoint.GetWorldLocation() + FireRotation.Vector() * ProjectileData.MaxRange;
+            ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
+            if(HitResults.Num() > 0)
+            {   
+                for(FHitResult HitResult : HitResults)
+                {
+                    ShowImpactVisual(HitResult.Location);
+                }
+            }
+            else
+            {
+                HideShotVisual();
+            }
+            HitResults.Empty();
+        }
+    }   
+
+    UFUNCTION(BlueprintEvent)
+    void ShowShotVisual(FVector Start,FVector End)
+    {
+        Print(f"ShowShotVisual is not implemented in BP for this class: {GetName()}");
+    }
+
+    UFUNCTION(BlueprintEvent)
+    void ShowImpactVisual(FVector Location)
+    {
+        Print(f"ShowImpactVisual is not implemented in BP for this class: {GetName()}");
+    }
+
+    UFUNCTION(BlueprintEvent)
+    void HideShotVisual()
+    {
+        Print(f"HideShotVisual is not implemented in BP for this class: {GetName()}");
+    }
+
+}
