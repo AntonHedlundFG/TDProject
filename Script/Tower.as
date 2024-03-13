@@ -356,6 +356,10 @@ class AStaticFireTower : ATower
             }
             HitResults.Empty();
         }
+        else
+        {
+            HideShotVisual();
+        }
     }   
 
     UFUNCTION(BlueprintEvent)

@@ -28,6 +28,9 @@ struct FProjectileData
     UPROPERTY()
     float MaxRange = 1000.0f;
 
+    UPROPERTY()
+    FLinearColor Color = FLinearColor::White;
+
     float GetSquaredProjectileSpeed() const
     {
         return Speed * Speed;
