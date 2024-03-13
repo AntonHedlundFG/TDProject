@@ -147,6 +147,7 @@ class ATDEnemy : AActor
     void EnemyDeath()
     {
         if (!IsActive) return;
+        DamageTypeComponent.RemoveAllInstances();
         Path = nullptr;
         IsActive = false;
         OnEnemyDeath.Broadcast(this);
