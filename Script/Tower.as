@@ -341,19 +341,22 @@ class AStaticFireTower : ATower
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AHitScanMultiProjectile Projectile = Cast<AHitScanMultiProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot(ProjectileData, HitResults);
-            FVector ShotEndLocation = HitResults.Num() > 0 ? HitResults.Last().Location : FirePoint.GetWorldLocation() + FireRotation.Vector() * ProjectileData.MaxRange;
-            ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
+            FVector ShotEndLocation;
             if(HitResults.Num() > 0)
             {   
-                for(FHitResult HitResult : HitResults)
+                for(int i = 0; i < HitResults.Num(); i++)
                 {
-                    ShowImpactVisual(HitResult.Location);
+                    if(i >= ProjectileData.MaxHits) break;
+                    ShowImpactVisual(HitResults[i].Location);
+                    ShotEndLocation = HitResults[i].Location;
                 }
             }
             else
             {
                 HideShotVisual();
+                ShotEndLocation = FirePoint.GetWorldLocation() + FirePoint.GetWorldRotation().ForwardVector * ProjectileData.MaxRange;
             }
+            ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
             HitResults.Empty();
         }
         else

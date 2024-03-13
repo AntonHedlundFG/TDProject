@@ -6,6 +6,8 @@ struct FProjectileData
     float LifeTimeMax = 5.0f;
     UPROPERTY()
     int32 Damage = 1.0f;
+    UPROPERTY()
+    int32 MaxHits = 1;
 
     bool bIsHoming = false;
     UPROPERTY()
