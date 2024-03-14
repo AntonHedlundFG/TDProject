@@ -86,7 +86,7 @@ class AProjectile : AActor
         AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ProjectileData.ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
         if(IsValid(Explosion))
         {
-            Explosion.Explode(DamageType, DamageTypeDuration, DamageTypeAmount);
+            Explosion.Explode(DamageType, DamageTypeDuration, DamageTypeAmount, ProjectileData.MaxRange);
             bIsActive = false;
             bExplodeRemaining = false;
         }

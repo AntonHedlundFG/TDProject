@@ -7,35 +7,17 @@
     USceneComponent FiringBarrelRoot;
     UPROPERTY(DefaultComponent, Attach = FiringBarrelRoot)
     USceneComponent FirePoint;
+
+    //--- Tower properties ---//
+    UPROPERTY(Category = "Tower")
+    UTowerData TowerData;
     
-    UPROPERTY(Category = "Tower")
-    FName TowerName = FName("Tower");
-    UPROPERTY(Category = "Tower")
-    int TowerPrice = 100;
-    // Fire rate in seconds
-    UPROPERTY(Category = "Tower")
-    float FireRate = 1.0f;
-    // How often the tower should update its target
-    UPROPERTY(Category = "Tower")
-    float TargetUpdateRate = 0.5f;
     // Should the tower track a target
     UPROPERTY(Category = "Tower|Tracking")
     bool bShouldTrackTarget = false;
     // Keep target until it's out of range
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking") 
     bool bKeepTarget = false; 
-    // Percentage of the target's velocity to lead (1 = 100% of the target's velocity, 0 = no lead, -1 = 100% of the target's velocity in the opposite direction)
-    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
-    float TrackingLeadPercentage = 0.0f;
-    // How often the tower should update its target's position
-    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
-    float TrackingUpdateRate = 0.1f;
-    // Degrees per second
-    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
-    float RotationSpeedXAxis = 0.0f;    
-    // Degrees per second
-    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
-    float RotationSpeedYAxis = 0.0f;
     // Lock fire direction to firepoint forward vector
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
     bool bLockFireDirection = false;
@@ -43,9 +25,6 @@
     // Projectile class
     UPROPERTY(Category = "Tower|Projectile")
     TSubclassOf<AProjectile> ProjectileClass;
-    //--- Projectile properties ---//
-    UPROPERTY(Category = "Tower|Projectile")
-    FProjectileData ProjectileData;
 
     // Debug
     UPROPERTY(Category = "Debug")
@@ -60,7 +39,6 @@
     float TargetTrackedTime;
     UPROPERTY(NotVisible, Replicated)
     FRotator TargetRotation;
-
 
     //--- Object Pooling ---//
     UObjectPoolSubsystem ObjectPoolSubsystem;
@@ -90,15 +68,15 @@
         if(ProjectileClass != nullptr)
         {
             // Calculate the max range for the projectile if it is affected by gravity
-            if(ProjectileData.BIsAffectedByGravity())
+            if(TowerData.ProjectileData.BIsAffectedByGravity())
             {
-                if(!ProjectileData.bManualMaxRange) 
+                if(!TowerData.ProjectileData.bManualMaxRange) 
                 {
                     // Lower it if it is less than the editor set value
                     float MaxRange = CalculateMaxDistanceForProjectile();
-                    if(MaxRange < ProjectileData.MaxRange)
+                    if(MaxRange < TowerData.ProjectileData.MaxRange)
                     {
-                        ProjectileData.MaxRange = MaxRange;
+                        TowerData.ProjectileData.MaxRange = MaxRange;
                     }
                 }
             }
@@ -114,11 +92,11 @@
 
     void StartFiringTimers()
     {
-        FireTimerHandle = System::SetTimer(this, n"Fire", FireRate, true);
-        TargetUpdateTimerHandle = System::SetTimer(this, n"UpdateTarget", TargetUpdateRate, true);
+        FireTimerHandle = System::SetTimer(this, n"Fire", TowerData.FireRate, true);
+        TargetUpdateTimerHandle = System::SetTimer(this, n"UpdateTarget", TowerData.TargetUpdateRate, true);
         if(bShouldTrackTarget)
         {
-            TargetTrackingTimerHandle = System::SetTimer(this, n"TrackTarget", TrackingUpdateRate, true);
+            TargetTrackingTimerHandle = System::SetTimer(this, n"TrackTarget", TowerData.TrackingUpdateRate, true);
         }
         // Get GameState and bind to GameEnded delegate
         ATDGameState GameState = Cast<ATDGameState>(GetWorld().GetGameState());
@@ -139,7 +117,7 @@
             {
                 System::DrawDebugArrow(
                     FirePoint.GetWorldLocation(),
-                    FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * ProjectileData.MaxRange,
+                    FirePoint.GetWorldLocation() + TargetRotation.ForwardVector * TowerData.ProjectileData.MaxRange,
                     10.0f,
                     FLinearColor::Red,
                     0.0f,
@@ -156,7 +134,7 @@
         {
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
-            Projectile.Shoot(ProjectileData);
+            Projectile.Shoot(TowerData.ProjectileData);
             BlueprintFire();
         }
     }   
@@ -180,7 +158,7 @@
             return;
         }
 
-        ATDEnemy ClosestEnemy = Cast<ATDEnemy>(UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), ProjectileData.MaxRange));
+        ATDEnemy ClosestEnemy = Cast<ATDEnemy>(UObjectRegistry::Get().GetClosestActorOfType(ERegisteredObjectTypes::ERO_Monster, FirePoint.GetWorldLocation(), TowerData.ProjectileData.MaxRange));
         if(IsValid(ClosestEnemy))
         {
             Target = ClosestEnemy.GetTargetComponent();
@@ -196,7 +174,7 @@
     bool IsTargetInRange(FVector InTargetLocation)
     {
         TargetDistance = (InTargetLocation - ActorLocation).Size();
-        return TargetDistance <= ProjectileData.MaxRange;
+        return TargetDistance <= TowerData.ProjectileData.MaxRange;
     }
 
     UFUNCTION()
@@ -236,7 +214,7 @@
             float CosTheta = Direction.DotProduct((GetActorLocation() - TargetNewLocation).GetSafeNormal());
 
             // Calculate the time to intercept assuming the target continues in a straight line at constant velocity
-            float A = ProjectileData.GetSquaredProjectileSpeed() - TargetVelocity.SizeSquared();
+            float A = TowerData.ProjectileData.GetSquaredProjectileSpeed() - TargetVelocity.SizeSquared();
             float B = 2 * TargetDistance * TargetVelocity.Size() * CosTheta;
             float C = -TargetDistance * TargetDistance;
 
@@ -255,12 +233,12 @@
             {
 
                 FVector Dir;
-                FVector LeadVelocity = TargetVelocity * (1 + TrackingLeadPercentage);
+                FVector LeadVelocity = TargetVelocity * (1 + TowerData.TrackingLeadPercentage);
 
-                if(ProjectileData.BIsAffectedByGravity())
+                if(TowerData.ProjectileData.BIsAffectedByGravity())
                 {                    
                     // Vb = Vt - 0.5*Ab*t + [(Pti - Pbi) / t]     
-                    FVector GravityVector = FVector(0.0f, 0.0f, -ProjectileData.Gravity);
+                    FVector GravityVector = FVector(0.0f, 0.0f, -TowerData.ProjectileData.Gravity);
                     Dir = (TargetVelocity + LeadVelocity - GravityVector * T * 0.5f + (TargetLocation - FirePoint.GetWorldLocation()) / T).GetSafeNormal();
                     
                 }   
@@ -286,37 +264,37 @@
     UFUNCTION()
     void RotateToTarget(float DeltaSeconds)
     {            
-        if(RotationSpeedXAxis > 0)
+        if(TowerData.RotationSpeedXAxis > 0)
         {
             FRotator YawRotation = TargetRotation;
             YawRotation.Pitch = 0.0f;
             YawRotation.Roll = 0.0f;
 
-            FRotator NewRot = Math::RInterpTo(GetActorRotation(), YawRotation, DeltaSeconds, RotationSpeedXAxis);
+            FRotator NewRot = Math::RInterpTo(GetActorRotation(), YawRotation, DeltaSeconds, TowerData.RotationSpeedXAxis);
             SetActorRotation(NewRot);
         }
 
-        if ( RotationSpeedYAxis > 0 )
+        if ( TowerData.RotationSpeedYAxis > 0 )
         {
             FRotator CurrentPitch = FiringBarrelRoot.GetRelativeRotation();
             FRotator NewPitch = CurrentPitch;
             NewPitch.Pitch = TargetRotation.Pitch;
-            NewPitch = Math::RInterpTo(CurrentPitch, NewPitch, DeltaSeconds, RotationSpeedYAxis);
+            NewPitch = Math::RInterpTo(CurrentPitch, NewPitch, DeltaSeconds, TowerData.RotationSpeedYAxis);
             FiringBarrelRoot.SetRelativeRotation(NewPitch);
         }
     }
 
     float CalculateMaxDistanceForProjectile()
     {
-        if(ProjectileData.BIsAffectedByGravity())
+        if(TowerData.ProjectileData.BIsAffectedByGravity())
         {
             // Max distance for a projectile affected by gravity until it hits the ground at the same height as the fire point
-            return ProjectileData.GetSquaredProjectileSpeed() * Math::Sin(2 * Math::DegreesToRadians(45)) / (ProjectileData.Gravity * ProjectileData.GravityMultiplier);
+            return TowerData.ProjectileData.GetSquaredProjectileSpeed() * Math::Sin(2 * Math::DegreesToRadians(45)) / (TowerData.ProjectileData.Gravity * TowerData.ProjectileData.GravityMultiplier);
         }
         else
         {
             // Max distance for a projectile not affected by gravity
-            return ProjectileData.Speed * ProjectileData.LifeTimeMax;
+            return TowerData.ProjectileData.Speed * TowerData.ProjectileData.LifeTimeMax;
         } 
     }
 
@@ -347,13 +325,13 @@ class AStaticFireTower : ATower
         {
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AHitScanMultiProjectile Projectile = Cast<AHitScanMultiProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
-            Projectile.Shoot(ProjectileData, HitResults);
+            Projectile.Shoot(TowerData.ProjectileData, HitResults);
             FVector ShotEndLocation;
             if(HitResults.Num() > 0)
             {   
                 for(int i = 0; i < HitResults.Num(); i++)
                 {
-                    if(i >= ProjectileData.MaxHits) break;
+                    if(i >= TowerData.ProjectileData.MaxHits) break;
                     ShowImpactVisual(HitResults[i].Location);
                     ShotEndLocation = HitResults[i].Location;
                 }
@@ -361,7 +339,7 @@ class AStaticFireTower : ATower
             else
             {
                 HideShotVisual();
-                ShotEndLocation = FirePoint.GetWorldLocation() + FirePoint.GetWorldRotation().ForwardVector * ProjectileData.MaxRange;
+                ShotEndLocation = FirePoint.GetWorldLocation() + FirePoint.GetWorldRotation().ForwardVector * TowerData.ProjectileData.MaxRange;
             }
             ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
             HitResults.Empty();

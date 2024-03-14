@@ -12,7 +12,7 @@ class UPurchasable_Upgrade : UPurchasable
         ATower tower = Cast<ATower>(Tower);
         if(IsValid(tower))
         {
-            tower.ProjectileData = Data;
+            tower.TowerData.ProjectileData = Data;
             tower.Purchasables = NewPurchasables;
         } 
     }
