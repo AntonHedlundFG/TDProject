@@ -10,7 +10,7 @@
 
     //--- Tower properties ---//
     UPROPERTY(Category = "Tower")
-    UTowerData TowerData;
+    protected UTowerData TowerData;
     
     // Should the tower track a target
     UPROPERTY(Category = "Tower|Tracking")
@@ -104,6 +104,15 @@
         {
             GameState.OnGameLostEvent.AddUFunction(this, n"OnGameEnded");
         }
+    }
+
+    void SetTowerData(UTowerData NewData)
+    {
+        TowerData = NewData;
+
+        //Reset firing cooldowns
+        System::ClearAndInvalidateTimerHandle(FireTimerHandle);
+        FireTimerHandle = System::SetTimer(this, n"Fire", TowerData.FireRate, true);
     }
 
     UFUNCTION(BlueprintOverride)
