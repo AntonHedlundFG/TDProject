@@ -1,7 +1,7 @@
 class UPurchasable_Upgrade : UPurchasable
 {
     UPROPERTY()
-    FProjectileData Data;
+    UTowerData Data;
     UPROPERTY()
     TArray<UPurchasable> NewPurchasables;
 
@@ -12,8 +12,12 @@ class UPurchasable_Upgrade : UPurchasable
         ATower tower = Cast<ATower>(Tower);
         if(IsValid(tower))
         {
-            tower.TowerData.ProjectileData = Data;
-            tower.Purchasables = NewPurchasables;
+            tower.TowerData = Data;
+            tower.Purchasables.Remove(this);
+            for(int i = 0; i < NewPurchasables.Num(); i++)
+            {
+                tower.Purchasables.Add(NewPurchasables[i]);
+            }
         } 
     }
 }
