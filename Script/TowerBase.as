@@ -33,7 +33,7 @@
         if (System::IsServer())
         {
             InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
-            InteractableComp.OnInteractDelegate.BindUFunction(this, n"Build");
+            InteractableComp.OnInteractDelegate.BindUFunction(this, n"ServerInteract");
         }
         UpdateMeshColors(); //Set mesh color
     }
@@ -62,33 +62,25 @@
     bool CanInteract(APlayerController User, uint8 Param)
     {
         ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
-        if (PS == nullptr || Purchasables[Param] == nullptr || PS.PlayerIndex != OwningPlayerIndex)
+        if (PS == nullptr || Purchasables.Num() <= 0 || PS.PlayerIndex != OwningPlayerIndex)
         {
             return false;
         }
 
-        return true;
+        return Purchasables[Param] != nullptr;
     }
 
 
     UFUNCTION()
-    void Build(APlayerController User, uint8 Param)
+    void ServerInteract(APlayerController User, uint8 Param)
     {
         if(!System::IsServer()) return;
 
-        if(Purchasables[Param] == nullptr) return;
+        ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
 
-        Purchasables[Param].OnPurchase(this);
+        if(Purchasables[Param] == nullptr || PS == nullptr) return;
 
-
-        // if(BuildableTowers[Param] == nullptr) return;
-
-        // ATower SpawnedTower = Cast<ATower>(SpawnActor(BuildableTowers[Param], this.GetActorLocation(), this.GetActorRotation(), FName(), true ));
-        // SpawnedTower.OwningPlayerIndex = this.OwningPlayerIndex;
-        // SpawnedTower.SetActorLabel(DefaultActorLabel);
-        // FinishSpawningActor(SpawnedTower);
-
-        // this.DestroyActor();
+        Purchasables[Param].OnPurchase(PS, this);
     }
 
 

@@ -6,8 +6,8 @@ class UPurchasable : UDataAsset
     UPROPERTY()
     FString Name = "Default";
 
-    void OnPurchase(ATowerBase Tower)
+    void OnPurchase(ATDPlayerState PlayerState, ATowerBase Tower)
     {
-
+        PlayerState.Gold -= Price;
     }
 }
