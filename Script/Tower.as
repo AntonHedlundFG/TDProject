@@ -157,8 +157,15 @@
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot(ProjectileData);
+            BlueprintFire();
         }
-    }    
+    }   
+
+    UFUNCTION(BlueprintEvent)
+    void BlueprintFire()
+    {
+        // Implement in BP
+    } 
     
     UFUNCTION()
     void UpdateTarget()
@@ -358,6 +365,7 @@ class AStaticFireTower : ATower
             }
             ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
             HitResults.Empty();
+            BlueprintFire();
         }
         else
         {
