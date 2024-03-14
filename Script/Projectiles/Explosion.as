@@ -6,6 +6,9 @@ class AExplosion : ANiagaraActor
     UPROPERTY(DefaultComponent)
     UPoolableComponent PoolableComponent;
 
+    UPROPERTY()
+    FProjectileData ProjectileData;
+
     UPROPERTY(EditAnywhere, Category = "Explosion")
     float Lifetime = 2.0f;
 
@@ -24,10 +27,9 @@ class AExplosion : ANiagaraActor
     TArray<AActor> DamagedActors;
 
     UFUNCTION()
-    void Explode(UTDDamageType DamageType = nullptr, float Duration = 0.0f, int Amount = 1, float RadiusIn = 0.0f)
+    void Explode(FProjectileData Data)
     {
-        if (RadiusIn > 0)
-            Radius = RadiusIn;
+        ProjectileData = Data;
         if(bDebug)
         {
             // Debug for testing
@@ -36,7 +38,8 @@ class AExplosion : ANiagaraActor
 
         NetMulti_VisualizeExplosion();
         
-        DamageAllInRange(DamageType, Duration, Amount);
+        DamageAllInRange();
+        OnExplode();
         
         System::SetTimer(PoolableComponent, n"ReturnToPool", Lifetime, false);
 
@@ -58,7 +61,7 @@ class AExplosion : ANiagaraActor
     }
     
     UFUNCTION()
-    void DamageAllInRange(UTDDamageType DamageType, float Duration, int Amount)
+    void DamageAllInRange()
     {
         DamagedActors.Empty();
 
@@ -68,11 +71,17 @@ class AExplosion : ANiagaraActor
             if (IsValid(Monster) && !DamagedActors.Contains(Monster))
             {
                 Monster.HealthSystemComponent.TakeDamage(Damage);
-                if (IsValid(DamageType))
-                    Monster.TryApplyDamageType(DamageType, Duration, Amount);
+                if (IsValid(ProjectileData.DamageType))
+                    Monster.TryApplyDamageType(ProjectileData.DamageType, ProjectileData.DamageTypeDuration, ProjectileData.DamageTypeAmount);
                 DamagedActors.Add(Monster);
             }
         }
+    }
+
+    UFUNCTION(BlueprintEvent)
+    void OnExplode()
+    {
+        // Blueprint event
     }
 
 }
