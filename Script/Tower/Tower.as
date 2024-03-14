@@ -106,6 +106,7 @@
         }
     }
 
+    UFUNCTION(BlueprintEvent)
     void SetTowerData(UTowerData NewData)
     {
         TowerData = NewData;
