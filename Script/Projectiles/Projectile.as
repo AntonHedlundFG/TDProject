@@ -227,7 +227,7 @@ class AHitScanMultiProjectile : AProjectile
 {
     void Shoot(FProjectileData Data, TArray<FHitResult>& HitResults) 
     {
-        Super::Shoot();
+        Super::Shoot(Data);
         System::LineTraceMulti(ActorLocation, ActorLocation + ActorForwardVector * Data.MaxRange,
             ETraceTypeQuery::TraceTypeQuery3,false, TArray<AActor>(), 
             EDrawDebugTrace::None, HitResults, true);
