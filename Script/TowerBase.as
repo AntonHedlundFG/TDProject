@@ -13,7 +13,7 @@
 
     // UPROPERTY()
     // TArray<TSubclassOf<ATower>> BuildableTowers;
-    UPROPERTY()
+    UPROPERTY(Replicated)
     TArray<UPurchasable> Purchasables;
     
    
