@@ -29,7 +29,7 @@
     void BeginPlay()
     {
         //Bind InteractableComponent delegate functions.
-        InteractableComp.OnLocalInteractDelegate.BindUFunction(this, n"LocalInteract_BP");
+        InteractableComp.OnLocalInteractDelegate.BindUFunction(this, n"TryLocalInteract");
         if (System::IsServer())
         {
             InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
@@ -50,6 +50,17 @@
         {
             Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
         }
+    }
+
+    UFUNCTION()
+    void TryLocalInteract(APlayerController User, uint8 Param)
+    {
+        ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
+        
+        if (PS == nullptr || Purchasables.Num() <= 0 || PS.PlayerIndex != OwningPlayerIndex)
+            return;
+
+        LocalInteract_BP(User, Param);
     }
 
     UFUNCTION(BlueprintEvent)
