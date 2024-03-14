@@ -27,14 +27,6 @@ class AProjectile : AActor
 
     bool bExplodeRemaining = false;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
-    UTDDamageType DamageType;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
-    float DamageTypeDuration = 2.0f;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
-    int DamageTypeAmount = 1;
-
-
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
     {
@@ -86,7 +78,7 @@ class AProjectile : AActor
         AExplosion Explosion = Cast<AExplosion>(ObjectPoolSubsystem.GetObject(ProjectileData.ExplosionClass, GetActorLocation(), FRotator::ZeroRotator));
         if(IsValid(Explosion))
         {
-            Explosion.Explode(DamageType, DamageTypeDuration, DamageTypeAmount, ProjectileData.MaxRange);
+            Explosion.Explode(ProjectileData.DamageType, ProjectileData.DamageTypeDuration, ProjectileData.DamageTypeAmount, ProjectileData.MaxRange);
             bIsActive = false;
             bExplodeRemaining = false;
         }
@@ -114,9 +106,9 @@ class AProjectile : AActor
                 HitActors.Add(Target);
                 HealthSystem.TakeDamage(ProjectileData.Damage);
                 
-                if (IsValid(DamageType))
+                if (IsValid(ProjectileData.DamageType))
                 {
-                    Target.TryApplyDamageType(DamageType, DamageTypeDuration, DamageTypeAmount);
+                    Target.TryApplyDamageType(ProjectileData.DamageType, ProjectileData.DamageTypeDuration, ProjectileData.DamageTypeAmount);
                 }
             }
         }
