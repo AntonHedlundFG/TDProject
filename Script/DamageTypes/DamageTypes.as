@@ -4,6 +4,7 @@ event void FOnDamageTypeChange(UTDDamageType DamageType, int NewAmount);
 // Use UDamageEffectComponents for that functionality.
 class UTDDamageTypeComponent : UActorComponent
 {
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage Effects")
     private TMap<UTDDamageType, int> DamageTypeInstances;
 
     TArray<UDelayedRemoval> DelayedRemovals;
@@ -23,7 +24,6 @@ class UTDDamageTypeComponent : UActorComponent
             DamageTypeInstances.Add(DamageType, 0);
         DamageTypeInstances[DamageType] += Amount;
         OnDamageTypeChange.Broadcast(DamageType, DamageTypeInstances[DamageType]);
-
         if (Duration > 0.0f)
         {
             UDelayedRemoval Delayed = Cast<UDelayedRemoval>(NewObject(this, UDelayedRemoval::StaticClass()));

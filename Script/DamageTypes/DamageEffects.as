@@ -51,6 +51,8 @@ class UDamageTypeOverTime : UDamageEffectComponent
 
     private UHealthSystemComponent HealthCompRef;
 
+    float Remainder = 0.0f;
+
     UFUNCTION(BlueprintOverride)
     void Tick(float DeltaSeconds)
     {
@@ -58,8 +60,15 @@ class UDamageTypeOverTime : UDamageEffectComponent
         int Amount = ComponentRef.GetEffectsOfType(DamageType);
         if (Amount < 1) return;
         float TotalDPS = (bAffectedByMultipleStacks ? Amount * DPSPerStack : DPSPerStack);
-        int DamageThisTick = TotalDPS * DeltaSeconds;
+        int DamageThisTick = Math::FloorToInt(TotalDPS * DeltaSeconds);
+        Remainder += TotalDPS * DeltaSeconds - float(DamageThisTick);
+        if (Remainder >= 1.0f)
+        {
+            Remainder--;
+            DamageThisTick++;
+        }
         HealthCompRef.TakeDamage(DamageThisTick);
+        
     }
     UFUNCTION(BlueprintOverride)
     void BeginPlay()
