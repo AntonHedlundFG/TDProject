@@ -232,13 +232,14 @@ class AHitScanMultiProjectile : AProjectile
             ETraceTypeQuery::TraceTypeQuery3,false, TArray<AActor>(), 
             EDrawDebugTrace::None, HitResults, true);
                 
-            for (FHitResult HitResult : HitResults)
+            for (int i = 0; i < HitResults.Num(); i++)
             {
-                if (IsValid(HitResult.Actor))
+                if (IsValid(HitResults[i].Actor) && i < Data.MaxHits)
                 {
-                    DamageTarget(HitResult.Actor);
+                    DamageTarget(HitResults[i].Actor);
                 }
             }
+
         
     }
 

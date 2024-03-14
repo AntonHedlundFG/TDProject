@@ -18,7 +18,7 @@
     
    
     // Owning player index
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership", Replicated, ReplicatedUsing = UpdateMeshColors)
     uint8 OwningPlayerIndex = 0;
     // Player colors data asset
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
@@ -35,18 +35,21 @@
             InteractableComp.CanInteractDelegate.BindUFunction(this, n"CanInteract");
             InteractableComp.OnInteractDelegate.BindUFunction(this, n"Build");
         }
+        UpdateMeshColors(); //Set mesh color
+    }
 
-        if (PlayerColors != nullptr)
+    UFUNCTION()
+    void UpdateMeshColors()
+    {
+        if (PlayerColors == nullptr) return;
+
+        FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
+        TArray<UActorComponent> OutComponents;
+        GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
+        for (UActorComponent Comp : OutComponents)
         {
-            FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
-            TArray<UActorComponent> OutComponents;
-            GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
-            for (UActorComponent Comp : OutComponents)
-            {
-                Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
-            }
+            Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
         }
-
     }
 
     UFUNCTION(BlueprintEvent)

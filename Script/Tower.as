@@ -2,20 +2,11 @@
 {
     default bReplicates = true;
 
-    // -- Components --
-    //UPROPERTY(DefaultComponent, RootComponent)
-    //USceneComponent Root;
-
-    UPROPERTY(DefaultComponent, Attach = Root)
-    USceneComponent FinishedMeshRoot;
-    default FinishedMeshRoot.bVisible = false;
-
-    UPROPERTY(DefaultComponent, Attach = FinishedMeshRoot)
-    UStaticMeshComponent FinishedMesh;
-
-    UPROPERTY(DefaultComponent, Attach = FinishedMesh)
+    // -- Components -- //
+    UPROPERTY(DefaultComponent)
+    USceneComponent FiringBarrelRoot;
+    UPROPERTY(DefaultComponent, Attach = FiringBarrelRoot)
     USceneComponent FirePoint;
-    // ---------------
     
     UPROPERTY(Category = "Tower")
     FName TowerName = FName("Tower");
@@ -49,13 +40,6 @@
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
     bool bLockFireDirection = false;
 
-    // Owning player index
-    // UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Tower|Ownership")
-    // uint8 OwningPlayerIndex = 0;
-    // Player colors data asset
-    // UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower|Ownership")
-    // UPlayerColorsDataAsset PlayerColors;
-    
     // Projectile class
     UPROPERTY(Category = "Tower|Projectile")
     TSubclassOf<AProjectile> ProjectileClass;
@@ -90,7 +74,6 @@
     void BeginPlay()
     {  
         Super::BeginPlay();
-        SetPlayerColor();
         ObjectPoolSubsystem = UObjectPoolSubsystem::Get();
 
         if (System::IsServer())
@@ -164,21 +147,6 @@
             }
         }
 
-    }
-
-    UFUNCTION()
-    private void SetPlayerColor()
-    {
-        if (PlayerColors != nullptr)
-        {
-            FVector PlayerColor = PlayerColors.GetColorOf(OwningPlayerIndex);
-            TArray<UActorComponent> OutComponents;
-            GetAllComponents(UStaticMeshComponent::StaticClass(), OutComponents);
-            for (UActorComponent Comp : OutComponents)
-            {
-                Cast<UStaticMeshComponent>(Comp).SetVectorParameterValueOnMaterials(FName("Tint"), PlayerColor);
-            }
-        }
     }
 
     UFUNCTION()
@@ -323,12 +291,11 @@
 
         if ( RotationSpeedYAxis > 0 )
         {
-            FRotator MeshRotation = FinishedMesh.GetRelativeRotation();
-            FRotator RollRotation = MeshRotation;
-            RollRotation.Roll = -TargetRotation.Pitch;
-            RollRotation = Math::RInterpTo(MeshRotation, RollRotation, DeltaSeconds, RotationSpeedYAxis);
-            FinishedMesh.SetRelativeRotation(RollRotation);
-
+            FRotator CurrentPitch = FiringBarrelRoot.GetRelativeRotation();
+            FRotator NewPitch = CurrentPitch;
+            NewPitch.Pitch = TargetRotation.Pitch;
+            NewPitch = Math::RInterpTo(CurrentPitch, NewPitch, DeltaSeconds, RotationSpeedYAxis);
+            FiringBarrelRoot.SetRelativeRotation(NewPitch);
         }
     }
 
@@ -374,39 +341,46 @@ class AStaticFireTower : ATower
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AHitScanMultiProjectile Projectile = Cast<AHitScanMultiProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
             Projectile.Shoot(ProjectileData, HitResults);
-            FVector ShotEndLocation = HitResults.Num() > 0 ? HitResults.Last().Location : FirePoint.GetWorldLocation() + FireRotation.Vector() * ProjectileData.MaxRange;
-            ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
+            FVector ShotEndLocation;
             if(HitResults.Num() > 0)
             {   
-                for(FHitResult HitResult : HitResults)
+                for(int i = 0; i < HitResults.Num(); i++)
                 {
-                    ShowImpactVisual(HitResult.Location);
+                    if(i >= ProjectileData.MaxHits) break;
+                    ShowImpactVisual(HitResults[i].Location);
+                    ShotEndLocation = HitResults[i].Location;
                 }
             }
             else
             {
                 HideShotVisual();
+                ShotEndLocation = FirePoint.GetWorldLocation() + FirePoint.GetWorldRotation().ForwardVector * ProjectileData.MaxRange;
             }
+            ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
             HitResults.Empty();
+        }
+        else
+        {
+            HideShotVisual();
         }
     }   
 
     UFUNCTION(BlueprintEvent)
     void ShowShotVisual(FVector Start,FVector End)
     {
-        Print(f"ShowShotVisual is not implemented in BP for this class: {GetName()}");
+        // Implement in BP
     }
 
     UFUNCTION(BlueprintEvent)
     void ShowImpactVisual(FVector Location)
     {
-        Print(f"ShowImpactVisual is not implemented in BP for this class: {GetName()}");
+        // Implement in BP
     }
 
     UFUNCTION(BlueprintEvent)
     void HideShotVisual()
     {
-        Print(f"HideShotVisual is not implemented in BP for this class: {GetName()}");
+        // Implement in BP
     }
 
 }

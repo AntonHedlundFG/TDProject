@@ -6,6 +6,8 @@ struct FProjectileData
     float LifeTimeMax = 5.0f;
     UPROPERTY()
     int32 Damage = 1.0f;
+    UPROPERTY()
+    int32 MaxHits = 1;
 
     bool bIsHoming = false;
     UPROPERTY()
@@ -27,6 +29,9 @@ struct FProjectileData
     bool bManualMaxRange = false;
     UPROPERTY()
     float MaxRange = 1000.0f;
+
+    UPROPERTY()
+    FLinearColor Color = FLinearColor::White;
 
     float GetSquaredProjectileSpeed() const
     {
