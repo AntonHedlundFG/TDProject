@@ -1,5 +1,7 @@
 class AExplosion : ANiagaraActor
 {
+    default bReplicates = true;
+    default bReplicateMovement = true;
 
     UPROPERTY(DefaultComponent)
     UPoolableComponent PoolableComponent;
@@ -32,6 +34,17 @@ class AExplosion : ANiagaraActor
             System::DrawDebugSphere(GetActorLocation(), Radius, 12, FLinearColor::Red, 1.0f, 2.0f );
         }
 
+        NetMulti_VisualizeExplosion();
+        
+        DamageAllInRange(DamageType, Duration, Amount);
+        
+        System::SetTimer(PoolableComponent, n"ReturnToPool", Lifetime, false);
+
+    }
+
+    UFUNCTION(NetMulticast)
+    void NetMulti_VisualizeExplosion()
+    {
         // Play Niagara effect
         if (IsValid(NiagaraComponent))
         {
@@ -42,10 +55,6 @@ class AExplosion : ANiagaraActor
         {
             // Play the explosion sound
         }
-        DamageAllInRange(DamageType, Duration, Amount);
-        
-        System::SetTimer(PoolableComponent, n"ReturnToPool", Lifetime, false);
-
     }
     
     UFUNCTION()
