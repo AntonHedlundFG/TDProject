@@ -13,11 +13,7 @@ class UPurchasable_Upgrade : UPurchasable
         if(IsValid(tower))
         {
             tower.TowerData = Data;
-            tower.Purchasables.Remove(this);
-            for(int i = 0; i < NewPurchasables.Num(); i++)
-            {
-                tower.Purchasables.Add(NewPurchasables[i]);
-            }
+            tower.Purchasables = NewPurchasables;
         } 
     }
 }
