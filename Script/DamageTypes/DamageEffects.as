@@ -29,7 +29,12 @@ class UDamageEffectComponent : UActorComponent
 class UDamageTypeMultiplier : UDamageEffectComponent
 {
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
-    float MultiplierPerStack = 0.8f;
+    float MultiplierPerStack = 0.9f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
+    float MinimumValue = 0.4f;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage Effects")
+    float MaximumValue = 1.0f;
 
     UFUNCTION()
     float GetValue()
@@ -39,7 +44,7 @@ class UDamageTypeMultiplier : UDamageEffectComponent
         int Effects = ComponentRef.GetEffectsOfType(DamageType);
         if (Effects == 0) return 1.0f; // No stacks
         if (!bAffectedByMultipleStacks) return MultiplierPerStack; // Single stack
-        return Math::Pow(MultiplierPerStack, Effects); // Multiple stacks
+        return Math::Clamp(Math::Pow(MultiplierPerStack, Effects), MinimumValue, MaximumValue); // Multiple stacks
     }
 }
 
