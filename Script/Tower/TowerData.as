@@ -18,6 +18,8 @@
     // Degrees per second
     UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
     float RotationSpeedYAxis = 0.0f;
+    UPROPERTY(EditAnywhere, Category = "Tower|Tracking", meta = (EditCondition = "bShouldTrackTarget"))
+    bool bShouldShootWithoutTarget = false;
 
 
     UPROPERTY()

@@ -140,7 +140,7 @@
     UFUNCTION()
     void Fire()
     {
-        if (ProjectileClass != nullptr && IsValid(Target))
+        if (ProjectileClass != nullptr && (IsValid(Target) || TowerData.bShouldShootWithoutTarget))
         {
             FRotator FireRotation = bLockFireDirection ? FirePoint.GetWorldRotation() : TargetRotation;
             AProjectile Projectile = Cast<AProjectile>(ObjectPoolSubsystem.GetObject(ProjectileClass , FirePoint.GetWorldLocation(), FireRotation));
