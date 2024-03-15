@@ -33,7 +33,7 @@ class ATDEnemySpawner : AActor
 
     // The time between each spawn
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    float DefaultSpawnInterval = 4.0f;
+    float DefaultSpawnInterval = 2.0f;
     float SpawnInterval;
     float SpawnTimer = 0.0f;
 

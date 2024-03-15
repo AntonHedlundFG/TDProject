@@ -8,7 +8,7 @@ class ATDGameMode : ALobbyGameMode
 
     // The time between waves
     UPROPERTY(EditAnywhere, Category = "EnemySpawn")
-    float WaveIntermissionTime = 10.0f;
+    float WaveIntermissionTime = 20.0f;
 
     // Current wave number / index
     int WaveIndex = -1;
