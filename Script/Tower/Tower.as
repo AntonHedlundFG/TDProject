@@ -9,7 +9,7 @@
     USceneComponent FirePoint;
 
     //--- Tower properties ---//
-    UPROPERTY(Category = "Tower")
+    UPROPERTY(Replicated, ReplicatedUsing = OnRep_OnTowerDataUpdated, Category = "Tower")
     protected UTowerData TowerData;
     
     // Should the tower track a target
@@ -106,7 +106,7 @@
         }
     }
 
-    UFUNCTION(BlueprintEvent)
+    UFUNCTION()
     void SetTowerData(UTowerData NewData)
     {
         TowerData = NewData;
@@ -114,6 +114,16 @@
         //Reset firing cooldowns
         System::ClearAndInvalidateTimerHandle(FireTimerHandle);
         FireTimerHandle = System::SetTimer(this, n"Fire", TowerData.FireRate, true);
+        OnRep_OnTowerDataUpdated();
+    }
+
+    UFUNCTION(BlueprintEvent)
+    void OnRep_OnTowerDataUpdated()
+    {
+        if(System::IsServer())
+        {
+            StartFiringTimers();
+        }
     }
 
     UFUNCTION(BlueprintOverride)
@@ -147,7 +157,7 @@
             Projectile.Shoot(TowerData.ProjectileData);
             BlueprintFire();
         }
-    }   
+    }
 
     UFUNCTION(BlueprintEvent)
     void BlueprintFire()
@@ -342,22 +352,22 @@ class AStaticFireTower : ATower
                 for(int i = 0; i < HitResults.Num(); i++)
                 {
                     if(i >= TowerData.ProjectileData.MaxHits) break;
-                    ShowImpactVisual(HitResults[i].Location);
+                    NetMulti_ShowImpactVisual(HitResults[i].Location);
                     ShotEndLocation = HitResults[i].Location;
                 }
             }
             else
             {
-                HideShotVisual();
+                NetMulti_HideShotVisual();
                 ShotEndLocation = FirePoint.GetWorldLocation() + FirePoint.GetWorldRotation().ForwardVector * TowerData.ProjectileData.MaxRange;
             }
-            ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
+            NetMulti_ShowShotVisual(FirePoint.GetWorldLocation(), ShotEndLocation);
             HitResults.Empty();
             BlueprintFire();
         }
         else
         {
-            HideShotVisual();
+            NetMulti_HideShotVisual();
         }
     }   
 
@@ -374,20 +384,20 @@ class AStaticFireTower : ATower
         TargetRotation = (TargetLocation - FirePoint.GetWorldLocation()).Rotation();       
     }
 
-    UFUNCTION(BlueprintEvent)
-    void ShowShotVisual(FVector Start,FVector End)
+    UFUNCTION(NetMulticast, BlueprintEvent)
+    void NetMulti_ShowShotVisual(FVector Start,FVector End)
     {
         // Implement in BP
     }
 
-    UFUNCTION(BlueprintEvent)
-    void ShowImpactVisual(FVector Location)
+    UFUNCTION(NetMulticast, BlueprintEvent)
+    void NetMulti_ShowImpactVisual(FVector Location)
     {
         // Implement in BP
     }
 
-    UFUNCTION(BlueprintEvent)
-    void HideShotVisual()
+    UFUNCTION(NetMulticast, BlueprintEvent)
+    void NetMulti_HideShotVisual()
     {
         // Implement in BP
     }
