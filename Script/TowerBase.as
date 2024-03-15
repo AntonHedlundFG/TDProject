@@ -73,12 +73,14 @@
     bool CanInteract(APlayerController User, uint8 Param)
     {
         ATDPlayerState PS = Cast<ATDPlayerState>(User.PlayerState);
-        if (PS == nullptr || Purchasables.Num() <= 0 || PS.PlayerIndex != OwningPlayerIndex)
-        {
-            return false;
-        }
 
-        return Purchasables[Param] != nullptr;
+        //Cast and player index checks.
+        if(PS == nullptr || PS.PlayerIndex != OwningPlayerIndex) return false;
+        
+        //Purchasable null checks.
+        if(Purchasables.Num() <= 0 || Purchasables[Param] == nullptr) return false;
+
+        return PS.Gold >= Purchasables[Param].Price;
     }
 
 
