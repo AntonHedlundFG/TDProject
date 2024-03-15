@@ -19,6 +19,8 @@ class ATDEnemy : AActor
     UHealthSystemComponent HealthSystemComponent;
     UPROPERTY()
     USplineComponent Path;
+    UPROPERTY(DefaultComponent)
+    UProjectileMovementComponent MoveComp;
 
 
     UPROPERTY(BlueprintReadWrite, Replicated, ReplicatedUsing = OnRep_EnemyLevelChange, Category = "Enemy Settings")
@@ -174,15 +176,17 @@ class ATDEnemy : AActor
             return;
         }
 
-        LerpAlpha += (MoveSpeed * SlowedByCold.GetValue() / Length) * DeltaSeconds;
+        float SpeedValue = MoveSpeed * SlowedByCold.GetValue();
+
+        LerpAlpha += (SpeedValue / Length) * DeltaSeconds;
 
         float distance = Math::Lerp(0, Length, LerpAlpha);
 
         FTransform tf = Path.GetTransformAtDistanceAlongSpline(distance, ESplineCoordinateSpace::World);
         tf.Location = FVector(tf.Location.X, tf.Location.Y, tf.Location.Z);
 
-        SetActorLocation(tf.Location);
-        SetActorRotation(tf.Rotation);
+        FVector MoveVector = (tf.Location - GetActorLocation()).GetSafeNormal() * SpeedValue;
+        MoveComp.Velocity = MoveVector;
     }
 
     void OnEnemyGoalReached()
