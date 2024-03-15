@@ -45,10 +45,14 @@ class UInteractableComponent : USceneComponent
 
     bool TryLocalInteract(APlayerController User, uint8 Param = 0)
     {
+        OnLocalInteractDelegate.Execute(User, Param);
+        return true;
+        /* These checks don't seem to be neccesary. If required, one could make a separate CanInteractLocallyDelegate which can be bound for local checks.
         const bool bCanInteract = (CanInteractDelegate.IsBound() ? CanInteractDelegate.Execute(User, Param) : true);
         if (bCanInteract)
             OnLocalInteractDelegate.Execute(User, Param);
         return bCanInteract;
+        */
     }
 
     UFUNCTION(BlueprintOverride)
