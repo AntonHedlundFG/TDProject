@@ -39,7 +39,6 @@ class AExplosion : ANiagaraActor
         NetMulti_VisualizeExplosion();
         
         DamageAllInRange();
-        OnExplode();
         
         System::SetTimer(PoolableComponent, n"ReturnToPool", Lifetime, false);
 
@@ -52,6 +51,7 @@ class AExplosion : ANiagaraActor
         if (IsValid(NiagaraComponent))
         {
             NiagaraComponent.Activate(true);
+            OnExplode();
         }
 
         if (IsValid(ExplosionSound))
