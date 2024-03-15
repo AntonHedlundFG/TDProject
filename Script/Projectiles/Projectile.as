@@ -230,9 +230,7 @@ class AHitScanMultiProjectile : AProjectile
                 {
                     DamageTarget(HitResults[i].Actor);
                 }
-            }
-
-        
+            }       
     }
 
 }

@@ -361,6 +361,19 @@ class AStaticFireTower : ATower
         }
     }   
 
+    void TrackTarget() override
+    {
+        if(!IsValid(Target)) return;
+
+        FVector TargetNewLocation = Target.GetWorldLocation();
+        if(!IsTargetInRange(TargetNewLocation))
+        {
+            return;  
+        }
+        TargetLocation = TargetNewLocation;
+        TargetRotation = (TargetLocation - FirePoint.GetWorldLocation()).Rotation();       
+    }
+
     UFUNCTION(BlueprintEvent)
     void ShowShotVisual(FVector Start,FVector End)
     {
